@@ -6,15 +6,18 @@ import FirebaseFirestore
 struct SeriesDetailView: View {
     @StateObject private var viewModel: SeriesDetailViewModel
     @State private var currentVideoCodes: [String] = []
-    
+
     @State private var isDescriptionExpanded = false
     @State private var isPlayerPlaying = true
-    
+
     @State private var isFavoritedInFirestore: Bool = false
     @State private var isUserLoggedIn: Bool = false
-    @State private var watchedEpisodes: Set<String> = []  // Store watched episode IDs
-    
+    @State private var watchedEpisodes: Set<String> = []
+
     @State private var playerProgress: Double = 0.0
+    
+    // ✅ New state for player toggle
+    @State private var isUsingYouTube: Bool = true
 
     private var allEpisodes: [Episode] {
         let trailerEpisode = Episode(
@@ -25,12 +28,12 @@ struct SeriesDetailView: View {
         )
         return [trailerEpisode] + viewModel.episodes
     }
-    
+
     init(show: Series) {
         _viewModel = StateObject(wrappedValue: SeriesDetailViewModel(series: show))
         _currentVideoCodes = State(initialValue: [show.trailerURL])
     }
-    
+
     private var currentEpisode: Episode? {
         allEpisodes.first(where: { $0.code.first == currentVideoCodes.first })
     }
@@ -39,9 +42,9 @@ struct SeriesDetailView: View {
         ScrollView {
             VStack(alignment: .center, spacing: 0) {
                 Spacer().frame(height: 20)
-                
+
                 // MARK: Video Player
-                if viewModel.series.isYT {
+                if isUsingYouTube {
                     YouTubePlayerView(videos: currentVideoCodes, isPlaying: $isPlayerPlaying)
                         .frame(height: 220)
                         .frame(maxWidth: .infinity)
@@ -51,14 +54,15 @@ struct SeriesDetailView: View {
                         }
                 } else {
                     if let first = currentVideoCodes.first {
-                        DailymotionPlayerView(videoID: first)
+                        DailymotionPlayerView(videoID: first, isPlaying: $isPlayerPlaying)
                             .frame(height: 220)
                             .frame(maxWidth: .infinity)
                             .cornerRadius(12)
                             .onChange(of: isPlayerPlaying) { newValue in
                                 if !newValue { markCurrentEpisodeWatched() }
                             }
-                    } else {
+                    }
+ else {
                         Text("No video selected.")
                             .frame(height: 220)
                             .frame(maxWidth: .infinity)
@@ -68,8 +72,8 @@ struct SeriesDetailView: View {
                             .padding(.horizontal)
                     }
                 }
-                
-                // MARK: Details
+
+                // MARK: Details (title, description, etc.)
                 VStack(alignment: .leading, spacing: 12) {
                     Text(viewModel.series.title)
                         .font(.headline)
@@ -120,6 +124,16 @@ struct SeriesDetailView: View {
                         .padding(.top, 4)
                 }
                 .padding(.top, 16)
+
+                // MARK: Player Toggle
+                if !allEpisodes.isEmpty {
+                    Picker("Player", selection: $isUsingYouTube) {
+                        Text("YouTube").tag(true)
+                        Text("Dailymotion").tag(false)
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.vertical, 10)
+                }
 
                 // MARK: Episode Selection
                 if viewModel.isLoadingEpisodes {

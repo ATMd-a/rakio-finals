@@ -4,6 +4,7 @@ import FirebaseFirestore
 
 struct EditAccountView: View {
     @Environment(\.presentationMode) var presentationMode
+    @EnvironmentObject var viewModel: AccountViewModel
     @StateObject private var firebaseManager = FirebaseManager.shared
 
     @State private var username: String = ""
@@ -13,8 +14,9 @@ struct EditAccountView: View {
     @State private var showImagePicker = false
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var showSuccessAlert = false // ✅ success popup
 
-    private var db = Firestore.firestore()
+    private let db = Firestore.firestore()
 
     var body: some View {
         VStack(spacing: 20) {
@@ -99,7 +101,7 @@ struct EditAccountView: View {
             }
             .disabled(isSaving)
 
-            // Error Message
+            // Error message
             if let errorMessage = errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)
@@ -109,16 +111,25 @@ struct EditAccountView: View {
             Spacer()
         }
         .background(Color(hex: "14110F").ignoresSafeArea())
-        .onAppear { loadUserInfo() }
+        .onAppear(perform: loadUserInfo)
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $profileImage)
         }
+        .alert(isPresented: $showSuccessAlert) { // ✅ success alert
+            Alert(
+                title: Text("✅ Success"),
+                message: Text("Your profile has been updated successfully."),
+                dismissButton: .default(Text("OK")) {
+                    self.presentationMode.wrappedValue.dismiss()
+                }
+            )
+        }
     }
 
+    // MARK: - Load user info
     private func loadUserInfo() {
         guard let user = firebaseManager.currentUser else { return }
 
-        // Load username/email
         db.collection("users").document(user.uid).getDocument { snapshot, error in
             if let data = snapshot?.data() {
                 DispatchQueue.main.async {
@@ -128,12 +139,12 @@ struct EditAccountView: View {
             }
         }
 
-        // Load local profile image
-        if let localImage = loadImageLocally(named: "profile_\(user.uid)") {
+        if let localImage = loadImageLocally(named: user.uid) {
             self.profileImage = localImage
         }
     }
 
+    // MARK: - Save changes
     private func saveChanges() {
         guard let user = firebaseManager.currentUser else {
             errorMessage = "User not found"
@@ -145,42 +156,45 @@ struct EditAccountView: View {
 
         let group = DispatchGroup()
 
-        // Update username
+        // 🧑‍💻 Update username
         if !username.isEmpty {
             group.enter()
             let changeRequest = user.createProfileChangeRequest()
             changeRequest.displayName = username
             changeRequest.commitChanges { error in
-                if let error = error { errorMessage = error.localizedDescription }
+                if let error = error { self.errorMessage = error.localizedDescription }
                 self.db.collection("users").document(user.uid).updateData([
                     "username": self.username
                 ]) { err in
-                    if let err = err { errorMessage = err.localizedDescription }
+                    if let err = err { self.errorMessage = err.localizedDescription }
                     group.leave()
                 }
             }
         }
 
-        // Update password
+        // 🔒 Update password
         if !newPassword.isEmpty {
             group.enter()
             user.updatePassword(to: newPassword) { error in
-                if let error = error { errorMessage = error.localizedDescription }
+                if let error = error { self.errorMessage = error.localizedDescription }
                 group.leave()
             }
         }
 
-        // Update local profile image
+        // 🖼️ Save profile image locally
         if let profileImage = profileImage {
             group.enter()
-            saveImageLocally(profileImage, named: "profile_\(user.uid)")
+            saveImageLocally(profileImage, named: user.uid)
+            viewModel.profileImage = profileImage
             group.leave()
         }
 
+        // 🔁 When all done
         group.notify(queue: .main) {
             self.isSaving = false
             if self.errorMessage == nil {
-                self.presentationMode.wrappedValue.dismiss()
+                self.viewModel.currentUsername = self.username
+                self.showSuccessAlert = true // ✅ success popup
             }
         }
     }
@@ -188,13 +202,22 @@ struct EditAccountView: View {
     // MARK: - Local Storage Helpers
     private func saveImageLocally(_ image: UIImage, named: String) {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return }
-        let url = getDocumentsDirectory().appendingPathComponent(named)
-        try? data.write(to: url)
+
+        let fileManager = FileManager.default
+        let resourcesDir = getDocumentsDirectory().appendingPathComponent("Resources")
+
+        if !fileManager.fileExists(atPath: resourcesDir.path) {
+            try? fileManager.createDirectory(at: resourcesDir, withIntermediateDirectories: true)
+        }
+
+        let fileURL = resourcesDir.appendingPathComponent("\(named)_profile.jpg")
+        try? data.write(to: fileURL)
     }
 
     private func loadImageLocally(named: String) -> UIImage? {
-        let url = getDocumentsDirectory().appendingPathComponent(named)
-        return UIImage(contentsOfFile: url.path)
+        let fileURL = getDocumentsDirectory()
+            .appendingPathComponent("Resources/\(named)_profile.jpg")
+        return UIImage(contentsOfFile: fileURL.path)
     }
 
     private func getDocumentsDirectory() -> URL {

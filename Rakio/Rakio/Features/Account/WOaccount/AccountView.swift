@@ -13,9 +13,9 @@ struct AccountView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             if let user = viewModel.currentUser {
-                NavigationLink(destination: EditAccountView()) {
+                NavigationLink(destination: EditAccountView().environmentObject(viewModel)) {
                     HStack(spacing: 16) {
-                        Image(uiImage: viewModel.profileImage ?? UIImage(named: "MewerLogo_Black")!)
+                        Image(uiImage: viewModel.profileImage ?? UIImage(named: "MewerLogo_SBlackIcon")!)
                             .resizable()
                             .scaledToFill()
                             .frame(width: 65, height: 65)
@@ -25,12 +25,12 @@ struct AccountView: View {
                         Text(viewModel.currentUsername ?? viewModel.username(fromEmail: user.email ?? ""))
                             .foregroundColor(.white)
                             .font(.headline)
-
                         Spacer()
                     }
                     .padding(.horizontal)
                     .frame(height: 80)
                 }
+
             } else {
                 NavigationLink(destination: LoginView(selectedTab: .constant(.account)).navigationBarBackButtonHidden(true)) {
                     HStack(spacing: 16) {
@@ -82,6 +82,12 @@ struct AccountView: View {
         .padding(.top, 20)
         .background(Color(hex: "14110F").ignoresSafeArea())
         .navigationBarHidden(true)
+        .onAppear {
+            viewModel.loadProfileImage()
+            viewModel.fetchCurrentUsername()
+        }
+
+
     }
 
     // MARK: - Sections

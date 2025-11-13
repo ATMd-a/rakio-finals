@@ -20,7 +20,7 @@ class SeriesDetailViewModel: ObservableObject {
     
     // New convenience init for DocumentReference if you want to extend later
     init(documentReference: DocumentReference) {
-        self.series = Series(title: "", description: "", genre: [], isSeries: false, isYT: false, dateReleased: Timestamp(date: Date()), trailerURL: "", imageName: "", relatedNovelId: nil)
+        self.series = Series(title: "", description: "", genre: [], isSeries: false, dateReleased: Timestamp(date: Date()), trailerURL: "", imageName: "", relatedNovelId: nil)
         Task {
             await fetchFullSeries(from: documentReference)
         }

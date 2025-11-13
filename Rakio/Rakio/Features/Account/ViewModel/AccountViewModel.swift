@@ -117,7 +117,6 @@ final class AccountViewModel: ObservableObject {
                         description: data["description"] as? String ?? "",
                         genre: data["genre"] as? [String] ?? [],
                         isSeries: data["isSeries"] as? Bool ?? true,
-                        isYT: data["isYT"] as? Bool ?? false,
                         dateReleased: data["dateReleased"] as? Timestamp ?? Timestamp(),
                         trailerURL: data["trailerURL"] as? String ?? "",
                         imageName: data["imageName"] as? String ?? "",

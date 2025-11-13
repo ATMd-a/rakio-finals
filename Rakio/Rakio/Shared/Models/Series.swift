@@ -7,7 +7,6 @@ struct Series: Identifiable, Codable {
     var description: String
     var genre: [String]
     var isSeries: Bool
-    var isYT: Bool
     var dateReleased: Timestamp
     var trailerURL: String
     var imageName: String
@@ -15,7 +14,7 @@ struct Series: Identifiable, Codable {
     // REMOVED: var episodes: [Episode]? - This was causing the compilation errors
 
     enum CodingKeys: String, CodingKey {
-        case title, description, genre, isYT, isSeries, trailerURL, imageName, dateReleased, relatedNovelId
+        case title, description, genre, isSeries, trailerURL, imageName, dateReleased, relatedNovelId
         // REMOVED: episodes from CodingKeys
     }
     
@@ -36,7 +35,6 @@ extension Series {
             description: self.description,
             genre: self.genre,
             isSeries: self.isSeries,
-            isYT: self.isYT,
             dateReleased: self.dateReleased,
             trailerURL: self.trailerURL,
             imageName: self.imageName,
