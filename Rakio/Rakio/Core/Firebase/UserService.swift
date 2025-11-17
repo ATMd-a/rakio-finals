@@ -120,18 +120,18 @@ class UserService {
                     print("⚠️ Could not find seriesId for contentId \(contentId)")
                     continue
                 }
-
+                
                 try await userRef.updateData([
                     "watchHistory.\(contentId).seriesId": seriesId
                 ])
                 print("✅ Backfilled seriesId \(seriesId) for contentId \(contentId)")
             }
-        
+            
         }
         
         try await userRef.updateData(["watchHistory": watchHistory])
     }
- 
+    
     // MARK: - Watch History Management
     func updateWatchHistory(
         for videoId: String,
@@ -143,32 +143,32 @@ class UserService {
         guard let uid = Auth.auth().currentUser?.uid else {
             throw AuthError.userNotLoggedIn
         }
-
+        
         let userRef = db.collection("users").document(uid)
         let doc = try await userRef.getDocument()
         var watchHistory = doc.data()?["watchHistory"] as? [String: [String: Any]] ?? [:]
-
+        
         var existingEntry = watchHistory[episodeTitle] ?? [:]
         var videoIds = existingEntry["videoIds"] as? [String] ?? []
         if !videoIds.contains(videoId) {
             videoIds.append(videoId)
         }
-
+        
         if existingEntry["seriesId"] == nil, let seriesId = seriesId {
             existingEntry["seriesId"] = seriesId
         }
-
+        
         existingEntry["lastWatchedAt"] = Timestamp(date: lastWatchedAt)
         existingEntry["progress"] = progress
         existingEntry["videoIds"] = videoIds
-
+        
         watchHistory[episodeTitle] = existingEntry
-
+        
         try await userRef.updateData(["watchHistory": watchHistory])
         print("✅ Watch history updated for '\(episodeTitle)' with videoId \(videoId)")
     }
-
-
+    
+    
     func markEpisodeWatched(videoId: String, episodeTitle: String, seriesId: String, progress: Double) async {
         do {
             try await updateWatchHistory(
@@ -182,51 +182,78 @@ class UserService {
             print("❌ Failed to mark episode watched: \(error)")
         }
     }
-
-
-
+    
+    
+    
+    // MARK: - Fetch Watched Series
+    // ... existing code above ...
+    
     // MARK: - Fetch Watched Series
     func fetchWatchedVideos() async throws -> [WatchedContent] {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw AuthError.userNotLoggedIn
         }
-
+        
         let userDoc = try await db.collection("users").document(userId).getDocument()
         guard let watchHistory = userDoc.data()?["watchHistory"] as? [String: [String: Any]], !watchHistory.isEmpty else {
             print("❌ No watch history found.")
             return []
         }
-
+        
         var watchedVideos: [WatchedContent] = []
 
-        for (episodeTitle, data) in watchHistory {
-            let timestamp = (data["lastWatchedAt"] as? Timestamp)?.dateValue() ?? Date()
-            let progress = data["progress"] as? Double ?? 0.0
-            let seriesTitle = data["seriesTitle"] as? String
-            let videoIds = data["videoIds"] as? [String] ?? []
+            for (videoIdKey, data) in watchHistory { // Renamed 'episodeTitle' to 'videoIdKey' for clarity
+                let timestamp = (data["lastWatchedAt"] as? Timestamp)?.dateValue() ?? Date()
+                let progress = data["progress"] as? Double ?? 0.0
+                let seriesTitle = data["seriesTitle"] as? String // Still relying on seriesTitle if it's there
+                
+                // 1. Get the data needed to generate the thumbnail
+                let thumbnailData = ThumbnailData.generate(for: videoIdKey)
+                
+                // 2. Fetch the Episode data to get the title
+                let episodeTitle: String
+                
+                do {
+                    // This queries all episode collections for the document that contains this video ID.
+                    let querySnapshot = try await db.collectionGroup("episodes")
+                        .whereField("videoIds", arrayContains: videoIdKey)
+                        .getDocuments()
+                    
+                    // Assuming the videoId is unique across all episodes
+                    if let episodeDoc = querySnapshot.documents.first,
+                       let episode = try? episodeDoc.data(as: Episode.self) {
+                        
+                        episodeTitle = episode.title // Assuming Episode struct has a 'title' property
+                        
+                        // If seriesTitle is missing in the watchHistory, you can grab it from the parent
+                        // The Series document ID is episodeDoc.reference.parent.parent?.documentID
+                        // You might need an extra fetch here if you need the Series TITLE, not just the ID
+                        
+                    } else {
+                        print("⚠️ Could not find episode document for video ID: \(videoIdKey). Using ID as title.")
+                        episodeTitle = "Episode \(videoIdKey)" // Fallback title
+                    }
+                } catch {
+                    print("❌ Error fetching episode for \(videoIdKey): \(error)")
+                    episodeTitle = "Error Loading Title"
+                }
 
-            // You can choose the first videoId as the main reference
-            let mainVideoId = videoIds.first ?? ""
+                let watchedItem = WatchedContent(
+                    videoId: videoIdKey,
+                    title: episodeTitle, // ✅ Use the fetched/fallback title
+                    thumbnailURL: thumbnailData.url,
+                    lastWatchedAt: timestamp,
+                    progress: progress,
+                    seriesTitle: seriesTitle,
+                    episodeTitle: episodeTitle,
+                    isEpisode: true
+                )
 
-            let watchedItem = WatchedContent(
-                videoId: mainVideoId,
-                title: episodeTitle,
-                thumbnailURL: data["thumbnailURL"] as? String,
-                lastWatchedAt: timestamp,
-                progress: progress,
-                seriesTitle: seriesTitle,
-                episodeTitle: episodeTitle,
-                isEpisode: true
-            )
-
-            watchedVideos.append(watchedItem)
-        }
-
+                watchedVideos.append(watchedItem)
+            }
+        
         let sortedVideos = watchedVideos.sorted { $0.lastWatchedAt > $1.lastWatchedAt }
         print("✅ Loaded \(sortedVideos.count) watched episodes.")
         return sortedVideos
     }
-
-
-
 }

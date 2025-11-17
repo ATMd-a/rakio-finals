@@ -5,87 +5,95 @@ struct DailymotionPlayerView: UIViewRepresentable {
     let videoID: String
     @Binding var isPlaying: Bool
     
-    // MARK: - Coordinator Setup
     func makeCoordinator() -> Coordinator { Coordinator() }
     
-    // MARK: - makeUIView (Initialize WKWebView)
     func makeUIView(context: Context) -> WKWebView {
-        // 1. Define the Configuration
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
-        // Allow playback without user action, but we will control it with JS later
         config.mediaTypesRequiringUserActionForPlayback = []
-        
-        // Disable Picture-in-Picture
         config.allowsPictureInPictureMediaPlayback = false
         
-        // 2. Declare and Initialize the WKWebView ONCE with the configuration
-        let webView = WKWebView(frame: .zero, configuration: config) // <-- Use this line!
+        // Enable message bridge
+        config.userContentController.add(context.coordinator, name: "playerEvent")
         
-        // Prevent scrolling (optional, for cleaner UX)
+        let webView = WKWebView(frame: .zero, configuration: config)
         webView.scrollView.isScrollEnabled = false
-        webView.scrollView.bounces = false
-        
-        // Set the Coordinator as the delegate
         webView.navigationDelegate = context.coordinator
-        
         return webView
     }
     
-    // MARK: - updateUIView (Load/Control Logic)
     func updateUIView(_ uiView: WKWebView, context: Context) {
         if context.coordinator.currentVideoID != videoID {
             
-            // 1. Load: Set autoplay=0 and enable JS API interaction
-            let urlString = "https://www.dailymotion.com/embed/video/\(videoID)?autoplay=0&api=1&cc_lang=en&ui-start-screen-info=false&mute=0"
+            let urlString =
+            """
+            https://www.dailymotion.com/embed/video/\(videoID)?api=1&autoplay=0&mute=0&controls=1
+            """
+            
             print("Loading Dailymotion URL: \(urlString)")
             
             if let url = URL(string: urlString) {
-                let request = URLRequest(url: url)
-                uiView.load(request)
+                uiView.load(URLRequest(url: url))
                 context.coordinator.currentVideoID = videoID
-                context.coordinator.isReady = false
-                context.coordinator.hasSentReadyCommand = false // Reset control flag
+                context.coordinator.isPlayerLoaded = false
             }
-        } else if context.coordinator.isReady {
-            
-            // 2. Control: Use Dailymotion API commands for play/pause
-            let command: String
-            if isPlaying {
-                // Use the API command for playing
-                command = "player.api('play');"
-            } else {
-                // Use the API command for pausing
-                command = "player.api('pause');"
-            }
-            
-            // CRITICAL: Only send the command once the view's state changes
-            if context.coordinator.hasSentReadyCommand != isPlaying {
-                 uiView.evaluateJavaScript(command) { result, error in
-                    if let error = error {
-                        print("⚠️ JS error: \(error.localizedDescription)")
-                    } else {
-                        // Update the flag to prevent repeated calls
-                        context.coordinator.hasSentReadyCommand = self.isPlaying
-                    }
-                 }
+            return
+        }
+        
+        // Control
+        if context.coordinator.isPlayerLoaded {
+            let js = isPlaying ? "player.play();" : "player.pause();"
+            uiView.evaluateJavaScript(js) { result, error in
+                if let error = error {
+                    print("⚠️ JS error: \(error.localizedDescription)")
+                }
             }
         }
     }
     
-    // MARK: - Coordinator Class
-    class Coordinator: NSObject, WKNavigationDelegate {
+    
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var currentVideoID: String?
-        var isReady: Bool = false
-        // New flag to track the last sent play/pause state
-        var hasSentReadyCommand: Bool = false
+        var isPlayerLoaded = false
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            // Wait for a small delay to ensure the Dailymotion JS player object is initialized
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.isReady = true
-                print("✅ Dailymotion player iframe ready for \(self.currentVideoID ?? "unknown")")
+            print("✅ Injecting Dailymotion API…")
+            
+            let js =
+            """
+            window.player = DM.player(document.querySelector("iframe"), {
+                video: "\(currentVideoID ?? "")",
+                width: "100%",
+                height: "100%",
+                params: { autoplay: 0, api: 1 }
+            });
+
+            // Forward events to Swift
+            player.addEventListener("play", function() {
+                window.webkit.messageHandlers.playerEvent.postMessage("play");
+            });
+            player.addEventListener("pause", function() {
+                window.webkit.messageHandlers.playerEvent.postMessage("pause");
+            });
+            player.addEventListener("video_end", function() {
+                window.webkit.messageHandlers.playerEvent.postMessage("ended");
+            });
+            """
+
+            webView.evaluateJavaScript(js) { _, error in
+                if let error = error {
+                    print("⚠️ Inject error: \(error.localizedDescription)")
+                } else {
+                    print("✅ Dailymotion API loaded.")
+                    self.isPlayerLoaded = true
+                }
             }
+        }
+        
+        // Receive events from JS → Swift
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let event = message.body as? String else { return }
+            print("📩 DM EVENT:", event)
         }
     }
 }
