@@ -33,13 +33,30 @@ class SeriesViewModel: ObservableObject {
         await loadShows()
     }
     
-    // Method to get episodes for a specific series (call this from SeriesDetailView)
-    func getEpisodes(for seriesId: String) async -> [Episode] {
+    // Fetch YT episodes
+    func getEpisodesYT(for seriesId: String) async -> [EpisodeYT] {
         do {
-            return try await seriesService.fetchEpisodes(for: seriesId)
+            return try await seriesService.fetchEpisodesYT(for: seriesId)
         } catch {
-            print("❌ Error fetching episodes: \(error.localizedDescription)")
+            print("❌ Error fetching YT episodes: \(error.localizedDescription)")
             return []
         }
+    }
+    
+    // Fetch DM episodes (episodes 2)
+    func getEpisodesDM(for seriesId: String) async -> [EpisodeDM] {
+        do {
+            return try await seriesService.fetchEpisodesDM(for: seriesId)
+        } catch {
+            print("❌ Error fetching DM episodes: \(error.localizedDescription)")
+            return []
+        }
+    }
+    
+    // Optional: Combined episodes (if you ever need both)
+    func getAllEpisodes(for seriesId: String) async -> ([EpisodeYT], [EpisodeDM]) {
+        async let yt = getEpisodesYT(for: seriesId)
+        async let dm = getEpisodesDM(for: seriesId)
+        return await (try! yt, try! dm)
     }
 }

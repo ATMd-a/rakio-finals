@@ -1,14 +1,30 @@
-////
-////  Episode.swift
-////  Test3
-////
-////  Created by STUDENT on 9/19/25.
-////
 //
+//  EpisodeDM.swift
+//  Rakio
+//
+//  Created by STUDENT on 11/14/25.
+//
+
+
+//
+//  EpisodeYT.swift
+//  Rakio
+//
+//  Created by STUDENT on 11/14/25.
+//
+
+
+//
+//  Episode.swift
+//  Test3
+//
+//  Created by STUDENT on 9/19/25.
+//
+
 import Foundation
 import FirebaseFirestore
 
-struct Episode: Identifiable, Codable {
+struct EpisodeDM: Identifiable, Codable {
     @DocumentID var id: String?
     let title: String
     let code: [String]

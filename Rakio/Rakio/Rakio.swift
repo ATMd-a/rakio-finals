@@ -54,9 +54,9 @@ struct Rakio: App {
 //
 //shows (collection)
 //
-//player1 (subcollection for YouTube episodes)
+//episodes (subcollection for YouTube episodes)
 //
-//player2 (subcollection for Dailymotion episodes)
+//episodes 2 (subcollection for Dailymotion episodes)
 //
 //Each subcollection stores episodes with the same schema: title, code, epNumber.
 //
@@ -98,7 +98,7 @@ struct Rakio: App {
 //
 //Next Steps / Implementation Plan:
 //
-//Update Firestore subcollections: player1 and player2.
+//Update Firestore subcollections: episodes and episodes 2.
 //
 //Update SeriesDetailViewModel to fetch episodes from the selected player subcollection.
 //

@@ -5,10 +5,9 @@ class SeriesService {
     private let db = Firestore.firestore()
     private let collectionName = "shows"
 
-    // Fetch only series documents, NO episodes subcollection
+    // Fetch only series documents (no episodes)
     func fetchSeriesOnly() async throws -> [Series] {
         print("🔄 Fetching series only from Firestore...")
-
         let snapshot = try await db.collection(collectionName).getDocuments()
         print("📄 Documents fetched: \(snapshot.documents.count)")
 
@@ -16,82 +15,73 @@ class SeriesService {
         for document in snapshot.documents {
             do {
                 var series = try document.data(as: Series.self)
-                // CRITICAL CHANGE: Manually set the id
                 series.id = document.documentID
                 seriesList.append(series)
-                print("✅ Successfully decoded series: \(series.title) with ID: \(series.id ?? "N/A")")
+                print("✅ Fetched series: \(series.title) with ID: \(series.id ?? "N/A")")
             } catch {
                 print("⚠️ Error decoding document '\(document.documentID)': \(error)")
             }
         }
-        
         print("🎯 Total series fetched: \(seriesList.count)")
         return seriesList
     }
-    
-    func fetchEpisodes(for seriesId: String) async throws -> [Episode] {
-        print("🔄 Starting episode fetch for series ID: \(seriesId)")
 
-        do {
+    // Generic episode fetcher for any Codable type
+    func fetchEpisodes<T: Codable & Identifiable>(for seriesId: String, subcollection: String) async throws -> [T] {
+            print("🔄 Fetching '\(subcollection)' episodes for series ID: \(seriesId)")
+
             let snapshot = try await db.collection(collectionName)
                 .document(seriesId)
-                .collection("episodes")
-                .order(by: "epNumber") // ✅ Match the exact Firestore field
+                .collection(subcollection)
+                .order(by: "epNumber")
                 .getDocuments()
 
+            print("🎯 Fetched \(snapshot.documents.count) documents from '\(subcollection)'.")
 
-            print("🎯 Fetched \(snapshot.documents.count) documents from episodes subcollection.")
+            var episodes: [T] = []
 
-            var episodes: [Episode] = []
-            
-            // Loop through each document and attempt to decode it individually
             for document in snapshot.documents {
                 do {
-                    // Try to decode the document into an Episode struct
-                    let episode = try document.data(as: Episode.self)
-                    print("✅ Successfully decoded episode: \(episode.title)")
+                    // T is inferred as Episode when called from the ViewModel
+                    let episode = try document.data(as: T.self)
                     episodes.append(episode)
                 } catch {
-                    // Catch a specific decoding error and print its details
-                    print("❌ Failed to decode document '\(document.documentID)'.")
-                    print("   - Error: \(error.localizedDescription)")
-                    
-                    // Here's the key: printing the error directly often provides
-                    // the exact reason, like a missing or misspelled key.
-                    print("   - Debug Description: \(error)")
+                    print("❌ Failed to decode document '\(document.documentID)' as \(T.self): \(error)")
                 }
             }
-            
-            print("✅ Finished episode fetch. Total decoded episodes: \(episodes.count)")
+
+            print("✅ Finished fetch. Total decoded episodes: \(episodes.count)")
             return episodes
-        } catch {
-            print("❌ Firestore fetch error for series ID \(seriesId): \(error.localizedDescription)")
-            throw error
         }
+
+    // Convenience functions
+    func fetchEpisodesYT(for seriesId: String) async throws -> [EpisodeYT] {
+        try await fetchEpisodes(for: seriesId, subcollection: "episodes")
     }
-    
+
+    func fetchEpisodesDM(for seriesId: String) async throws -> [EpisodeDM] {
+        try await fetchEpisodes(for: seriesId, subcollection: "episodes 2")
+    }
+
+    // Fetch single series
     func fetchSeries(by id: String) async throws -> Series {
         let documentRef = db.collection(collectionName).document(id)
         let documentSnapshot = try await documentRef.getDocument()
-        
+
         if documentSnapshot.exists {
             var series = try documentSnapshot.data(as: Series.self)
             series.id = documentSnapshot.documentID
-            print("✅ Successfully fetched single series: \(series.title)")
+            print("✅ Successfully fetched series: \(series.title)")
             return series
         } else {
             throw NSError(domain: "FirestoreError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Series with ID \(id) not found."])
         }
     }
-    
+
+    // Fetch novel
     func fetchNovel(by novelId: String) async throws -> Novel? {
         let novelRef = db.collection("novels").document(novelId)
         let document = try await novelRef.getDocument()
-        
-        guard let novel = try? document.data(as: Novel.self) else {
-            return nil
-        }
-        
-        return novel
+        return try? document.data(as: Novel.self)
     }
 }

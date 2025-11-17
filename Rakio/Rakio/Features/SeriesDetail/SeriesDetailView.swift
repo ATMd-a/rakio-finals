@@ -5,18 +5,16 @@ import FirebaseFirestore
 // MARK: - Series Detail View
 struct SeriesDetailView: View {
     @StateObject private var viewModel: SeriesDetailViewModel
-    @State private var currentVideoCodes: [String] = []
-
+    @State private var currentEpisode: Episode?
+    
     @State private var isDescriptionExpanded = false
     @State private var isPlayerPlaying = true
-
+    @State private var playerProgress: Double = 0.0
+    
     @State private var isFavoritedInFirestore: Bool = false
     @State private var isUserLoggedIn: Bool = false
     @State private var watchedEpisodes: Set<String> = []
 
-    @State private var playerProgress: Double = 0.0
-    
-    // ✅ New state for player toggle
     @State private var isUsingYouTube: Bool = true
 
     private var allEpisodes: [Episode] {
@@ -26,16 +24,13 @@ struct SeriesDetailView: View {
             code: [viewModel.series.trailerURL],
             epNumber: 0
         )
+        // This is now correct, as viewModel.episodes only contains YT OR DM episodes, not both.
         return [trailerEpisode] + viewModel.episodes
     }
 
     init(show: Series) {
         _viewModel = StateObject(wrappedValue: SeriesDetailViewModel(series: show))
-        _currentVideoCodes = State(initialValue: [show.trailerURL])
-    }
-
-    private var currentEpisode: Episode? {
-        allEpisodes.first(where: { $0.code.first == currentVideoCodes.first })
+        _currentEpisode = State(initialValue: nil)
     }
 
     var body: some View {
@@ -44,36 +39,38 @@ struct SeriesDetailView: View {
                 Spacer().frame(height: 20)
 
                 // MARK: Video Player
-                if isUsingYouTube {
-                    YouTubePlayerView(videos: currentVideoCodes, isPlaying: $isPlayerPlaying)
-                        .frame(height: 220)
-                        .frame(maxWidth: .infinity)
-                        .cornerRadius(12)
-                        .onChange(of: isPlayerPlaying) { newValue in
-                            if !newValue { markCurrentEpisodeWatched() }
-                        }
-                } else {
-                    if let first = currentVideoCodes.first {
-                        DailymotionPlayerView(videoID: first, isPlaying: $isPlayerPlaying)
+                if let episode = currentEpisode {
+                    if isUsingYouTube {
+                        YouTubePlayerView(videos: episode.code, isPlaying: $isPlayerPlaying)
                             .frame(height: 220)
-                            .frame(maxWidth: .infinity)
                             .cornerRadius(12)
-                            .onChange(of: isPlayerPlaying) { newValue in
-                                if !newValue { markCurrentEpisodeWatched() }
+                            .onChange(of: playerProgress) { newValue in
+                                if newValue >= 0.9 {
+                                    Task {
+                                        await markEpisodeWatched(episode)
+                                    }
+                                }
+                            }
+
+                    } else {
+                        DailymotionPlayerView(videoID: episode.code.first ?? "", isPlaying: $isPlayerPlaying)
+                            .frame(height: 220)
+                            .cornerRadius(12)
+                            .onChange(of: playerProgress) { newValue in
+                                if newValue >= 0.9 { Task { await markEpisodeWatched(episode) } }
                             }
                     }
- else {
-                        Text("No video selected.")
-                            .frame(height: 220)
-                            .frame(maxWidth: .infinity)
-                            .background(Color.gray.opacity(0.3))
-                            .cornerRadius(12)
-                            .foregroundColor(.white)
-                            .padding(.horizontal)
-                    }
+                } else {
+                    Text("No video selected.")
+                        .frame(height: 220)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.gray.opacity(0.3))
+                        .cornerRadius(12)
+                        .foregroundColor(.white)
+                        .padding(.horizontal)
                 }
 
-                // MARK: Details (title, description, etc.)
+                // MARK: Details
                 VStack(alignment: .leading, spacing: 12) {
                     Text(viewModel.series.title)
                         .font(.headline)
@@ -82,15 +79,13 @@ struct SeriesDetailView: View {
                         .padding(.bottom, 2)
 
                     HStack {
-                        if let episodeTitle = currentEpisode?.title {
-                            Text(episodeTitle)
+                        if let title = currentEpisode?.title {
+                            Text(title)
                                 .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                         }
-
                         Spacer()
-
                         Button(action: toggleSave) {
                             Image(systemName: isFavoritedInFirestore ? "bookmark.fill" : "bookmark")
                                 .font(.system(size: 20, weight: .medium))
@@ -102,8 +97,6 @@ struct SeriesDetailView: View {
                                 )
                         }
                         .disabled(!isUserLoggedIn)
-                        .buttonStyle(PlainButtonStyle())
-                        .help(isUserLoggedIn ? "Save to My List" : "Sign in to save this series")
                     }
 
                     HStack(spacing: 8) {
@@ -133,28 +126,41 @@ struct SeriesDetailView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding(.vertical, 10)
+                    // 💡 CRUCIAL CHANGE HERE: Reload episodes when the source changes
+                    .onChange(of: isUsingYouTube) { newSourceIsYouTube in
+                        // 1. Load the new set of episodes
+                        Task {
+                            await viewModel.fetchEpisodes(isYouTube: newSourceIsYouTube)
+                        }
+
+                        // 2. Reset or switch the current episode
+                        if let firstEpisode = allEpisodes.first(where: { $0.epNumber == 1 }) {
+                            currentEpisode = firstEpisode
+                        } else {
+                            currentEpisode = allEpisodes.first
+                        }
+
+                        isPlayerPlaying = true
+                    }
                 }
 
                 // MARK: Episode Selection
                 if viewModel.isLoadingEpisodes {
-                    HStack {
-                        Spacer()
-                        ProgressView("Loading episodes...")
-                            .foregroundColor(.white)
-                        Spacer()
-                    }
-                    .padding()
+                    ProgressView("Loading episodes...")
+                        .foregroundColor(.white)
+                        .padding()
                 } else if !allEpisodes.isEmpty {
                     EpisodeSelectionView(
                         episodes: allEpisodes,
                         selectedVideoURL: Binding(
-                            get: { currentVideoCodes.first },
+                            get: { currentEpisode?.code.first },
                             set: { newValue in
-                                guard let selectedVideo = newValue else { return }
-                                if let episode = allEpisodes.first(where: { $0.code.first == selectedVideo }) {
-                                    if let _ = currentEpisode?.code.first { markCurrentEpisodeWatched() }
-                                    currentVideoCodes = episode.code
-                                    Task { await checkIfEpisodeWatched(episodeId: selectedVideo) }
+                                if let previous = currentEpisode {
+                                    Task { await markEpisodeWatched(previous) }
+                                }
+                                if let url = newValue {
+                                    currentEpisode = allEpisodes.first(where: { $0.code.first == url })
+                                    Task { await checkIfEpisodeWatched(currentEpisode?.id) }
                                 }
                             }
                         ),
@@ -168,7 +174,7 @@ struct SeriesDetailView: View {
                         .padding(.top, 20)
                 }
 
-                // MARK: Related Novel Section
+                // MARK: Related Novel
                 if let novelDetail = viewModel.relatedNovelDetail {
                     HStack {
                         Text("Read the Novel")
@@ -218,36 +224,122 @@ struct SeriesDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadData()
-            
             if let firstEpisode = allEpisodes.first(where: { $0.epNumber == 1 }) {
-                currentVideoCodes = firstEpisode.code
-                await checkIfEpisodeWatched(episodeId: firstEpisode.code.first ?? "")
+                currentEpisode = firstEpisode
             } else {
-                currentVideoCodes = [viewModel.series.trailerURL]
-                await checkIfEpisodeWatched(episodeId: viewModel.series.trailerURL)
+                currentEpisode = allEpisodes.first
             }
-            
+            await checkIfEpisodeWatched(currentEpisode?.id)
             checkUserStatus()
             await loadFavoritedState()
             await loadAllWatchedEpisodes()
         }
-        .onAppear {
-            checkUserStatus()
-            isPlayerPlaying = true
-        }
+        .onAppear { checkUserStatus() }
         .onDisappear {
             isPlayerPlaying = false
-            markCurrentEpisodeWatched()
+            if let ep = currentEpisode { Task { await markEpisodeWatched(ep) } }
         }
     }
 }
 
-// MARK: - User Status
+// MARK: - Firestore Watch History
 extension SeriesDetailView {
-    private func checkUserStatus() {
-        isUserLoggedIn = Auth.auth().currentUser != nil
+
+    private func checkIfEpisodeWatched(_ episodeId: String?) async {
+        guard let episodeId = episodeId, !episodeId.isEmpty, isUserLoggedIn else { return }
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+
+        let userRef = Firestore.firestore().collection("users").document(userId)
+
+        do {
+            let doc = try await userRef.getDocument()
+            if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
+                await MainActor.run {
+                    if watchHistory[episodeId] != nil {
+                        watchedEpisodes.insert(episodeId)
+                    } else {
+                        watchedEpisodes.remove(episodeId)
+                    }
+                }
+            }
+        } catch {
+            print("Error checking watch history: \(error)")
+        }
+    }
+
+    /// Marks an episode as watched in Firestore and updates local state
+    @MainActor
+    func markEpisodeWatched(_ episode: Episode) async {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+        let userRef = Firestore.firestore().collection("users").document(userId)
+        
+        // Use the actual video ID as the key in the watchHistory map
+        guard let videoId = episode.code.first, !videoId.isEmpty else { return } // Added Guard
+        
+        do {
+            try await userRef.updateData([
+                "watchHistory.\(videoId)": [ // <-- FIX: Use videoId as the key
+                    "progress": 1,
+                    "lastWatchedAt": FieldValue.serverTimestamp()
+                ]
+            ])
+            
+            // This line is now safe, but should still be the videoId if that's what's tracked
+            if let videoID = episode.code.first {
+                watchedEpisodes.insert(videoID)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+
+
+
+    /// Checks if a given episode has been watched
+    private func checkIfEpisodeWatched(_ episodeId: String) async {
+        guard isUserLoggedIn, !episodeId.isEmpty else { return }
+        let userId = Auth.auth().currentUser!.uid
+        let userRef = Firestore.firestore().collection("users").document(userId)
+
+        do {
+            let doc = try await userRef.getDocument()
+            if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
+                await MainActor.run {
+                    if watchHistory[episodeId] != nil {
+                        watchedEpisodes.insert(episodeId)
+                    } else {
+                        watchedEpisodes.remove(episodeId)
+                    }
+                }
+            }
+        } catch {
+            print("Error checking watch history: \(error)")
+        }
+    }
+
+    /// Loads all watched episodes for the current user
+    private func loadAllWatchedEpisodes() async {
+        guard isUserLoggedIn, let userId = Auth.auth().currentUser?.uid else {
+            await MainActor.run { watchedEpisodes = [] }
+            return
+        }
+
+        let userRef = Firestore.firestore().collection("users").document(userId)
+
+        do {
+            let doc = try await userRef.getDocument()
+            if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
+                    let watchedIds = Set(watchHistory.keys) // The keys *are* the video IDs after Fix 1
+                    await MainActor.run { watchedEpisodes = watchedIds }
+                } else {
+                await MainActor.run { watchedEpisodes = [] }
+            }
+        } catch {
+            print("Error loading watch history: \(error)")
+        }
     }
 }
+
 
 // MARK: - Favorites
 extension SeriesDetailView {
@@ -262,8 +354,6 @@ extension SeriesDetailView {
                     try await UserService.shared.addSeriesToFavorites(seriesId: seriesId)
                     await MainActor.run { isFavoritedInFirestore = true }
                 }
-                try? await Task.sleep(nanoseconds: 300_000_000)
-                await loadFavoritedState()
             } catch {
                 print("❌ Failed to update favorites: \(error)")
             }
@@ -272,83 +362,19 @@ extension SeriesDetailView {
 
     private func loadFavoritedState() async {
         guard let seriesId = viewModel.series.id else { return }
-        guard let _ = Auth.auth().currentUser else {
-            await MainActor.run { self.isFavoritedInFirestore = false }
+        guard isUserLoggedIn else {
+            await MainActor.run { isFavoritedInFirestore = false }
             return
         }
-
         let favorited = await UserService.shared.isSeriesFavorited(seriesId: seriesId)
-        await MainActor.run { self.isFavoritedInFirestore = favorited }
-        print("⭐️ Favorite state loaded for \(seriesId): \(favorited)")
+        await MainActor.run { isFavoritedInFirestore = favorited }
     }
 }
 
-// MARK: - Watch History
+// MARK: - User Status
 extension SeriesDetailView {
-    private func checkIfEpisodeWatched(episodeId: String) async {
-        guard isUserLoggedIn, !episodeId.isEmpty else { return }
-        let userId = Auth.auth().currentUser!.uid
-        let userRef = Firestore.firestore().collection("users").document(userId)
-
-        do {
-            let doc = try await userRef.getDocument()
-            if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
-                if watchHistory[episodeId] != nil {
-                    await MainActor.run { watchedEpisodes.insert(episodeId) }
-                } else {
-                    await MainActor.run { watchedEpisodes.remove(episodeId) }
-                }
-            }
-        } catch {
-            print("Error checking watch history: \(error)")
-        }
-    }
-    
-    private func markCurrentEpisodeWatched() {
-        guard isUserLoggedIn, let episodeId = currentEpisode?.code.first else { return }
-        guard let userId = Auth.auth().currentUser?.uid else { return }
-
-        let userRef = Firestore.firestore().collection("users").document(userId)
-        let data: [String: Any] = [
-            "watchHistory": [
-                episodeId: [
-                    "lastWatchedAt": Timestamp(date: Date()),
-                    "progress": 1
-                ]
-            ]
-        ]
-        
-        userRef.setData(data, merge: true) { error in
-            if let error = error {
-                print("Failed to mark episode watched: \(error.localizedDescription)")
-            } else {
-                print("Successfully marked episode \(episodeId) as watched.")
-                Task { await MainActor.run { watchedEpisodes.insert(episodeId) } }
-            }
-        }
-    }
-
-    private func loadAllWatchedEpisodes() async {
-        guard isUserLoggedIn else {
-            await MainActor.run { watchedEpisodes = [] }
-            return
-        }
-
-        guard let userId = Auth.auth().currentUser?.uid else { return }
-        let userRef = Firestore.firestore().collection("users").document(userId)
-
-        do {
-            let doc = try await userRef.getDocument()
-            if let watchHistory = doc.data()?["watchHistory"] as? [String: [String: Any]] {
-                let watchedIds = Set(watchHistory.keys)
-                await MainActor.run { self.watchedEpisodes = watchedIds }
-                print("Loaded \(watchedIds.count) watched episodes from database.")
-            } else {
-                await MainActor.run { self.watchedEpisodes = [] }
-            }
-        } catch {
-            print("Error loading ALL watch history: \(error)")
-        }
+    private func checkUserStatus() {
+        isUserLoggedIn = Auth.auth().currentUser != nil
     }
 }
 
@@ -357,10 +383,10 @@ extension SeriesDetailView {
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        formatter.timeStyle = .none
         return formatter.string(from: date)
     }
 }
+
 
 // MARK: - ExpandableDescriptionView
 struct ExpandableDescriptionView: View {
