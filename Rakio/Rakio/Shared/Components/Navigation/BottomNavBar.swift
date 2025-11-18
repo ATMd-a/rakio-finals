@@ -13,8 +13,6 @@ struct BottomNavBar: View {
 
     let iconSize: CGFloat = 24
     let labelFontSize: CGFloat = 10
-
-    // Colors
     let defaultColor = Color(hex: "EEEBD3")
     let selectedColor = Color.rakioPrimary
 
@@ -23,7 +21,7 @@ struct BottomNavBar: View {
             navItem(iconName: "house.fill", label: "Home", tab: .home)
             navItem(iconName: "tv.fill", label: "Watch", tab: .watch)
             navItem(iconName: "book.fill", label: "Read", tab: .read)
-            Spacer() // To create spacing between middle and last
+            Spacer()
             navItem(iconName: "person.fill", label: "My account", tab: .account)
         }
         .padding(.horizontal, 5)

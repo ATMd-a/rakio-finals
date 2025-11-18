@@ -20,7 +20,6 @@ struct WatchView: View {
                 
                 Spacer()
                 
-               
             }
             .padding(.horizontal)
             .padding(.top, 20)
@@ -77,9 +76,7 @@ struct WatchView: View {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 10) {
                             ForEach(enumeratedShows, id: \.offset) { index, show in
-                                            // Navigation to SeriesDetailView
-                                            // The SeriesDetailView now manages its own data loading
-                                NavigationLink(destination: SeriesDetailView(show: show)) { // No need to pass viewModel
+                                NavigationLink(destination: SeriesDetailView(show: show)) { 
                                                 SeriesCardView(series: show)
                                             }
                                             .buttonStyle(PlainButtonStyle())

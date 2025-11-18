@@ -28,38 +28,37 @@ class SeriesService {
 
     // Generic episode fetcher for any Codable type
     func fetchEpisodes<T: Codable & Identifiable>(for seriesId: String, subcollection: String) async throws -> [T] {
-            print("🔄 Fetching '\(subcollection)' episodes for series ID: \(seriesId)")
+        print("🔄 Fetching '\(subcollection)' episodes for series ID: \(seriesId)")
 
-            let snapshot = try await db.collection(collectionName)
-                .document(seriesId)
-                .collection(subcollection)
-                .order(by: "epNumber")
-                .getDocuments()
+        let snapshot = try await db.collection(collectionName)
+            .document(seriesId)
+            .collection(subcollection)
+            .order(by: "epNumber")
+            .getDocuments()
 
-            print("🎯 Fetched \(snapshot.documents.count) documents from '\(subcollection)'.")
+        print("🎯 Fetched \(snapshot.documents.count) documents from '\(subcollection)'.")
 
-            var episodes: [T] = []
+        var episodes: [T] = []
 
-            for document in snapshot.documents {
-                do {
-                    // T is inferred as Episode when called from the ViewModel
-                    let episode = try document.data(as: T.self)
-                    episodes.append(episode)
-                } catch {
-                    print("❌ Failed to decode document '\(document.documentID)' as \(T.self): \(error)")
-                }
+        for document in snapshot.documents {
+            do {
+                let episode = try document.data(as: T.self)
+                episodes.append(episode)
+            } catch {
+                print("❌ Failed to decode document '\(document.documentID)' as \(T.self): \(error)")
             }
-
-            print("✅ Finished fetch. Total decoded episodes: \(episodes.count)")
-            return episodes
         }
 
-    // Convenience functions
-    func fetchEpisodesYT(for seriesId: String) async throws -> [EpisodeYT] {
+        print("✅ Finished fetch. Total decoded episodes: \(episodes.count)")
+        return episodes
+    }
+
+    // ✅ UPDATED: Both methods now return Episode (not separate types)
+    func fetchYouTubeEpisodes(for seriesId: String) async throws -> [Episode] {
         try await fetchEpisodes(for: seriesId, subcollection: "episodes")
     }
 
-    func fetchEpisodesDM(for seriesId: String) async throws -> [EpisodeDM] {
+    func fetchDailymotionEpisodes(for seriesId: String) async throws -> [Episode] {
         try await fetchEpisodes(for: seriesId, subcollection: "episodes 2")
     }
 

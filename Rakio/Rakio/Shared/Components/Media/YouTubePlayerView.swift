@@ -12,7 +12,7 @@ struct YouTubePlayerView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
-        config.allowsPictureInPictureMediaPlayback = false // ✅ Match Dailymotion behavior
+        config.allowsPictureInPictureMediaPlayback = false
         config.allowsAirPlayForMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
 
@@ -27,20 +27,15 @@ struct YouTubePlayerView: UIViewRepresentable {
     func updateUIView(_ uiView: WKWebView, context: Context) {
         guard let firstVideo = videos.first else { return }
         
-        // Extract clean video ID (in case full URL is provided)
         let cleanVideoID = extractVideoID(from: firstVideo)
         
-        // Only load once or when video changes
         if context.coordinator.currentVideoID != cleanVideoID {
                 print("🎬 Loading YouTube video: \(cleanVideoID)")
                 
-                // 🚀 FIX: Create a single list of ALL video IDs for the 'playlist' parameter
                 let allVideoIDs = videos
                     .map { extractVideoID(from: $0) }
                     .joined(separator: ",")
                 
-                // 💡 Change: We no longer need to check if it's empty, as the list always exists.
-                // We use the first video ID in the URL path and ALL IDs in the playlist parameter.
                 let playlistQuery = allVideoIDs.isEmpty ? "" : "&playlist=\(allVideoIDs)"
                 
             let urlString = """
@@ -53,7 +48,6 @@ struct YouTubePlayerView: UIViewRepresentable {
                     context.coordinator.isReady = false
                 }
             } else if context.coordinator.isReady {
-            // Control playback via JavaScript
             let command = isPlaying ? "player.playVideo();" : "player.pauseVideo();"
             uiView.evaluateJavaScript(command) { result, error in
                 if let error = error {
@@ -63,7 +57,7 @@ struct YouTubePlayerView: UIViewRepresentable {
         }
     }
     
-    // ✅ Helper to extract video ID from various YouTube URL formats
+    // Helper to extract video ID from various YouTube URL formats
     private func extractVideoID(from urlString: String) -> String {
         // If it's already just an ID (11 characters), return it
         if urlString.count == 11 && !urlString.contains("/") && !urlString.contains("?") {
@@ -72,14 +66,13 @@ struct YouTubePlayerView: UIViewRepresentable {
         
         // Extract from full URL formats
         if let url = URL(string: urlString) {
-            // youtube.com/watch?v=VIDEO_ID
             if let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
                let videoID = queryItems.first(where: { $0.name == "v" })?.value {
                 return videoID
             }
             
             // youtu.be/VIDEO_ID
-            if url.host?.contains("youtu.be") == true {
+            if url.host?.contains("youtube") == true {
                 return url.lastPathComponent
             }
             
@@ -88,7 +81,6 @@ struct YouTubePlayerView: UIViewRepresentable {
                 return url.pathComponents[2]
             }
         }
-        
         // Fallback: return as-is
         return urlString
     }
@@ -97,8 +89,6 @@ struct YouTubePlayerView: UIViewRepresentable {
         var currentVideoID: String?
         var isReady = false
         
-        
-
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             // Small delay to ensure YouTube player API is ready
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

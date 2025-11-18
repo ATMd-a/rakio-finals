@@ -23,16 +23,28 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Core/Extensions/Array+Chunked.swift",
+				"Core/Extensions/Date+Formatting.swift",
 			);
 			target = 3F1246F72E5EF58100207E2E /* Rakio */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		3F8AA5D22ECC66B900D529BF /* Exceptions for "Rakio" folder in "Copy Bundle Resources" phase from "Rakio" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 3F1246F62E5EF58100207E2E /* Resources */;
+			membershipExceptions = (
+				"Core/Extensions/Date+Formatting.swift",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		3F1246FA2E5EF58100207E2E /* Rakio */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				3F1998E92E9646D5002C4BE8 /* Exceptions for "Rakio" folder in "Rakio" target */,
+				3F8AA5D22ECC66B900D529BF /* Exceptions for "Rakio" folder in "Copy Bundle Resources" phase from "Rakio" target */,
 			);
 			path = Rakio;
 			sourceTree = "<group>";

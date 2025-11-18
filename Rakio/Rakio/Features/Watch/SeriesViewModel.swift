@@ -33,30 +33,29 @@ class SeriesViewModel: ObservableObject {
         await loadShows()
     }
     
-    // Fetch YT episodes
-    func getEpisodesYT(for seriesId: String) async -> [EpisodeYT] {
+    //Both return Episode (unified type)
+    func getYouTubeEpisodes(for seriesId: String) async -> [Episode] {
         do {
-            return try await seriesService.fetchEpisodesYT(for: seriesId)
+            return try await seriesService.fetchYouTubeEpisodes(for: seriesId)
         } catch {
-            print("❌ Error fetching YT episodes: \(error.localizedDescription)")
+            print("❌ Error fetching YouTube episodes: \(error.localizedDescription)")
             return []
         }
     }
     
-    // Fetch DM episodes (episodes 2)
-    func getEpisodesDM(for seriesId: String) async -> [EpisodeDM] {
+    func getDailymotionEpisodes(for seriesId: String) async -> [Episode] {
         do {
-            return try await seriesService.fetchEpisodesDM(for: seriesId)
+            return try await seriesService.fetchDailymotionEpisodes(for: seriesId)
         } catch {
-            print("❌ Error fetching DM episodes: \(error.localizedDescription)")
+            print("❌ Error fetching Dailymotion episodes: \(error.localizedDescription)")
             return []
         }
     }
     
-    // Optional: Combined episodes (if you ever need both)
-    func getAllEpisodes(for seriesId: String) async -> ([EpisodeYT], [EpisodeDM]) {
-        async let yt = getEpisodesYT(for: seriesId)
-        async let dm = getEpisodesDM(for: seriesId)
-        return await (try! yt, try! dm)
+    // Optional: Get both if you ever need them
+    func getAllEpisodes(for seriesId: String) async -> (youtube: [Episode], dailymotion: [Episode]) {
+        async let yt = getYouTubeEpisodes(for: seriesId)
+        async let dm = getDailymotionEpisodes(for: seriesId)
+        return await (yt, dm)
     }
 }
