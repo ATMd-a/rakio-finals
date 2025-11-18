@@ -23,7 +23,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Core/Extensions/Array+Chunked.swift",
-				"Core/Extensions/Series+Extension.swift",
 			);
 			target = 3F1246F72E5EF58100207E2E /* Rakio */;
 		};

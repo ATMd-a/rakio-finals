@@ -104,7 +104,7 @@ struct EnterPasswordView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .frame(width: 321, height: 47)
-                            .background(Color(hex: "437C90"))
+                            .background(Color.rakioPrimary)
                             .cornerRadius(8)
                     } else {
                         Text("Continue")
@@ -114,7 +114,7 @@ struct EnterPasswordView: View {
                     }
                 }
                 .frame(width: 321, height: 47)
-                .background(Color(hex: "437C90"))
+                .background(Color.rakioPrimary)
                 .cornerRadius(8)
                 .padding(.top, 20)
 
@@ -130,7 +130,7 @@ struct EnterPasswordView: View {
                     .padding(.bottom, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(hex: "14110F").ignoresSafeArea())
+            .background(Color.rakioBackground.ignoresSafeArea())
             .navigationBarBackButtonHidden(false)
 
 
@@ -155,6 +155,6 @@ struct EnterPasswordView: View {
     }
 }
 
-#Preview {
-    EnterPasswordView(email: "example@email.com", selectedTab: .constant(.account))
-}
+//#Preview {
+//    EnterPasswordView(email: "example@email.com", selectedTab: .constant(.account))
+//}

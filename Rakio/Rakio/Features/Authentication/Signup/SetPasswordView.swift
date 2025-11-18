@@ -123,7 +123,7 @@ struct SetPasswordView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .frame(width: 321, height: 47)
-                            .background(Color(hex: "437C90"))
+                            .background(Color.rakioPrimary)
                             .cornerRadius(8)
                     } else {
                         Text("Continue")
@@ -133,7 +133,7 @@ struct SetPasswordView: View {
                     }
                 }
                 .frame(width: 321, height: 47)
-                .background(Color(hex: "437C90"))
+                .background(Color.rakioPrimary)
                 .cornerRadius(8)
                 .padding(.top, 20)
 
@@ -148,7 +148,7 @@ struct SetPasswordView: View {
                     .padding(.bottom, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(hex: "14110F").ignoresSafeArea())
+            .background(Color.rakioBackground.ignoresSafeArea())
             .navigationBarBackButtonHidden(false)
 
             // Add sheet here for mismatch warning
@@ -168,12 +168,12 @@ struct SetPasswordView: View {
                     }
                     .font(.headline)
                     .frame(width: 120, height: 44)
-                    .background(Color(hex: "437C90"))
+                    .background(Color.rakioPrimary)
                     .foregroundColor(.white)
                     .cornerRadius(8)
                 }
                 .padding()
-                .background(Color(hex: "14110F"))
+                .background(Color.rakioBackground)
                 .presentationDetents([.fraction(0.3)])
             }
         }
@@ -197,6 +197,6 @@ struct SetPasswordView: View {
     }
 }
 
-#Preview {
-    SetPasswordView(email: "example@email.com", selectedTab: .constant(.account))
-}
+//#Preview {
+//    SetPasswordView(email: "example@email.com", selectedTab: .constant(.account))
+//}

@@ -124,7 +124,7 @@ struct SignupView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 .frame(width: 321, height: 47)
-                                .background(Color(hex: "437C90"))
+                                .background(Color.rakioPrimary)
                                 .cornerRadius(8)
                         } else {
                             Text("Continue")
@@ -134,7 +134,7 @@ struct SignupView: View {
                         }
                     }
                     .frame(width: 321, height: 47)
-                    .background(Color(hex: "437C90"))
+                    .background(Color.rakioPrimary)
                     .cornerRadius(8)
                     
                     
@@ -196,12 +196,12 @@ struct SignupView: View {
                                 .font(.custom("Poppins-Bold", size: 16))
                                 .foregroundColor(.white)
                                 .frame(width: 100, height: 44)
-                                .background(Color(hex: "437C90"))
+                                .background(Color.rakioPrimary)
                                 .cornerRadius(8)
                         }
                     }
                     .padding()
-                    .background(Color(hex: "14110F"))
+                    .background(Color.rakioBackground)
                     .cornerRadius(16)
                     .shadow(radius: 20)
                     .frame(maxWidth: 320)
@@ -209,7 +209,7 @@ struct SignupView: View {
                 }
             }
             .animation(.easeInOut, value: showEmailExistsOverlay)
-            .background(Color(hex: "14110F").ignoresSafeArea())
+            .background(Color.rakioBackground.ignoresSafeArea())
             .navigationBarHidden(true)
             .navigationDestination(isPresented: $navigateToSetPassword) {
                 SetPasswordView(email: email, selectedTab: .constant(.account))
@@ -240,6 +240,6 @@ struct SignupView: View {
     }
 }
 
-#Preview {
-    SignupView(selectedTab: .constant(.account))
-}
+//#Preview {
+//    SignupView(selectedTab: .constant(.account))
+//}

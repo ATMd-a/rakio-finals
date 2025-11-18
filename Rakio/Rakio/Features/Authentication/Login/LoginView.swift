@@ -125,7 +125,7 @@ struct LoginView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .frame(width: 321, height: 47)
-                            .background(Color(hex: "437C90"))
+                            .background(Color.rakioPrimary)
                             .cornerRadius(8)
                     } else {
                         Text("Continue")
@@ -135,7 +135,7 @@ struct LoginView: View {
                     }
                 }
                 .frame(width: 321, height: 47)
-                .background(Color(hex: "437C90"))
+                .background(Color.rakioPrimary)
                 .cornerRadius(8)
                 .disabled(isCheckingEmail)
 
@@ -165,7 +165,7 @@ struct LoginView: View {
                     .padding(.bottom, 16)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(hex: "14110F").ignoresSafeArea())
+            .background(Color.rakioBackground.ignoresSafeArea())
             .navigationBarHidden(true)
             .navigationDestination(isPresented: $navigateToEnterPassword) {
                 EnterPasswordView(email: email, selectedTab: $selectedTab)
@@ -195,6 +195,6 @@ struct LoginView: View {
     }
 }
 
-#Preview {
-    LoginView(selectedTab: .constant(.account))
-}
+//#Preview {
+//    LoginView(selectedTab: .constant(.account))
+//}

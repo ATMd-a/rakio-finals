@@ -16,7 +16,7 @@ struct BottomNavBar: View {
 
     // Colors
     let defaultColor = Color(hex: "EEEBD3")
-    let selectedColor = Color(hex: "437C90")
+    let selectedColor = Color.rakioPrimary
 
     var body: some View {
         HStack(spacing: 0) {

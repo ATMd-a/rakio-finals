@@ -110,7 +110,7 @@ struct EditAccountView: View {
 
             Spacer()
         }
-        .background(Color(hex: "14110F").ignoresSafeArea())
+        .background(Color.rakioBackground.ignoresSafeArea())
         .onAppear(perform: loadUserInfo)
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $profileImage)
@@ -184,7 +184,7 @@ struct EditAccountView: View {
         // 🖼️ Save profile image locally
         if let profileImage = profileImage {
             group.enter()
-            saveImageLocally(profileImage, named: user.uid)
+            LocalStorageManager.shared.saveProfileImage(profileImage, for: user.uid)
             viewModel.profileImage = profileImage
             group.leave()
         }
