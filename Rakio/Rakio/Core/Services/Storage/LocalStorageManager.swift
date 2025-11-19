@@ -6,14 +6,6 @@
 //
 
 
-//
-//  LocalStorageManager.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/18/25.
-//
-
-
 import UIKit
 
 /// Centralized manager for local file storage operations
@@ -46,12 +38,6 @@ final class LocalStorageManager {
     }
     
     // MARK: - Profile Image Operations
-    
-    /// Saves a profile image for a user
-    /// - Parameters:
-    ///   - image: The UIImage to save
-    ///   - userId: The unique identifier for the user
-    /// - Returns: True if successful, false otherwise
     @discardableResult
     func saveProfileImage(_ image: UIImage, for userId: String) -> Bool {
         guard let data = image.jpegData(compressionQuality: 0.8) else {
@@ -70,10 +56,7 @@ final class LocalStorageManager {
             return false
         }
     }
-    
-    /// Loads a profile image for a user
-    /// - Parameter userId: The unique identifier for the user
-    /// - Returns: The UIImage if found, nil otherwise
+
     func loadProfileImage(for userId: String) -> UIImage? {
         let fileURL = getResourcesDirectory().appendingPathComponent("\(userId)_profile.jpg")
         
@@ -90,10 +73,7 @@ final class LocalStorageManager {
         print("✅ Profile image loaded successfully for user: \(userId)")
         return image
     }
-    
-    /// Deletes a profile image for a user
-    /// - Parameter userId: The unique identifier for the user
-    /// - Returns: True if successful or file doesn't exist, false if deletion failed
+
     @discardableResult
     func deleteProfileImage(for userId: String) -> Bool {
         let fileURL = getResourcesDirectory().appendingPathComponent("\(userId)_profile.jpg")
@@ -114,8 +94,7 @@ final class LocalStorageManager {
     }
     
     // MARK: - Generic File Operations
-    
-    /// Saves data to a file in the resources directory
+
     @discardableResult
     func saveData(_ data: Data, filename: String) -> Bool {
         let fileURL = getResourcesDirectory().appendingPathComponent(filename)

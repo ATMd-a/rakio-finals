@@ -1,13 +1,10 @@
 import Foundation
 import FirebaseFirestore
-import SwiftUI // Required for @MainActor
-
-// MARK: - Supporting Data Structures
+import SwiftUI
 
 enum NavigationDirection {
     case previous, next
 }
-// MARK: - NovelDetailViewModel
 
 @MainActor
 class NovelDetailViewModel: ObservableObject {
@@ -23,9 +20,9 @@ class NovelDetailViewModel: ObservableObject {
     @Published var showUploadError = false
     @Published var uploadErrorMessage: String?
 
-    // MARK: - Chapter Reading State & Navigation (NEW/MODIFIED)
-    @Published var currentChapterIndex: Int? = nil // Index of chapter currently being read
-    @Published var shouldNavigateToChapter: Bool = false // Programmatic navigation flag
+    // MARK: - Chapter Reading State & Navigation
+    @Published var currentChapterIndex: Int? = nil
+    @Published var shouldNavigateToChapter: Bool = false
 
     var currentChapter: Chapter? {
         guard let index = currentChapterIndex, index >= 0, index < chapters.count else {
@@ -44,7 +41,7 @@ class NovelDetailViewModel: ObservableObject {
         return index < chapters.count - 1
     }
 
-    // MARK: - Navigation Logic (Implements the ChapterDetailView's navigateAction)
+    // MARK: - Implements the ChapterDetailView's navigateAction)
     func navigateChapter(direction: NavigationDirection) {
         guard let current = currentChapterIndex else { return }
 
@@ -58,10 +55,7 @@ class NovelDetailViewModel: ObservableObject {
                 currentChapterIndex = current + 1
             }
         }
-        // NOTE: No need to call self.shouldNavigateToChapter = true/false,
-        // the existing NavigationLink binding in NovelContentView maintains the active state.
     }
-    // END NEW/MODIFIED
 
     private let novelService = NovelService()
     
@@ -91,7 +85,7 @@ class NovelDetailViewModel: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - Fetch Series (Assumes Series struct exists)
+    // MARK: - Fetch Series
     func fetchSeries(by documentReference: DocumentReference) async {
         await MainActor.run { self.series = nil }
         
@@ -109,7 +103,7 @@ class NovelDetailViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Fetch Chapters from Firestore (UPDATED to include sorting)
+    // MARK: - Fetch Chapters from Firestore
     @MainActor
     func fetchChaptersFromFirestore() async {
         guard let novelId = novel?.id else {
@@ -150,7 +144,6 @@ class NovelDetailViewModel: ObservableObject {
 
     // MARK: - Load Chapters from TXT (Local Fallback)
     func loadChaptersFromTxt() {
-        // ... (Function body remains the same, just calls parseChapters) ...
         guard let novel = novel, let fileName = novel.txtFileName else {
             chapterErrorMessage = "No text file available for this novel."
             return
@@ -181,7 +174,7 @@ class NovelDetailViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Parse Chapters from TXT (CRITICAL LOGIC CHANGE FOR SEQUENCING)
+    // MARK: - Parse Chapters from TXT
     private func parseChapters(from text: String) -> [Chapter] {
         var result: [Chapter] = []
         let lines = text.components(separatedBy: .newlines)
@@ -197,8 +190,6 @@ class NovelDetailViewModel: ObservableObject {
                 
                 let lowerType = currentType.lowercased()
                 let isChapter = lowerType.contains("chapter")
-                
-                // If the type is chapter/special chapter, use the number. Otherwise, it's nil.
                 let numberToUse = isChapter ? chapterNumberCounter : nil
                 
                 let chapter = Chapter(
@@ -220,8 +211,8 @@ class NovelDetailViewModel: ObservableObject {
             let trimmedLine = line.trimmingCharacters(in: .whitespaces)
 
             if trimmedLine.starts(with: "---") {
-                saveCurrentChapter() // Save the previous chapter
-                sortCounter += 1 // Increment the overall order for the NEW chapter/section
+                saveCurrentChapter()
+                sortCounter += 1
 
                 if trimmedLine.starts(with: "---Author note") {
                     currentType = "Author Note"
@@ -245,29 +236,26 @@ class NovelDetailViewModel: ObservableObject {
                     // Title will be captured in the next block
                 }
             }
-            // If the current section needs a separate title (like Chapter or Special Chapter)
             else if (currentType.lowercased().contains("chapter")) && currentTitle.isEmpty && !trimmedLine.isEmpty {
-                currentTitle = trimmedLine // Capture the line immediately following the tag as the title
+                currentTitle = trimmedLine
             } else if !currentType.isEmpty {
-                // Otherwise, append the line to the content of the current chapter
                 currentContent += line + "\n"
             }
         }
         
-        saveCurrentChapter() // Save last chapter
+        saveCurrentChapter()
         return result
     }
 
-    // MARK: - Optional: Upload chapters to Firestore (The function that CREATES the subcollection)
+    // MARK: - Upload chapters to Firestore (The function that CREATES the subcollection)
     func uploadChaptersToFirestore() async {
         guard let novelId = novel?.id else { return }
         let db = Firestore.firestore()
         let chaptersRef = db.collection("novels").document(novelId).collection("chapters")
         
-        // This loop
         for chapter in self.chapters {
             do {
-                // The 'chapter' object now includes the 'sortOrder' field, which ensures the correct retrieval order.
+                // The 'chapter' object includes the 'sortOrder' field, which ensures the correct retrieval order.
                 _ = try chaptersRef.addDocument(from: chapter)
                 print("✅ Uploaded chapter: \(chapter.title) (Sort Order: \(chapter.sortOrder))")
             } catch {

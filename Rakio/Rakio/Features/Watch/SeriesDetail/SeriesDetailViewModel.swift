@@ -36,7 +36,6 @@ class SeriesDetailViewModel: ObservableObject {
                 await fetchFullSeriesData(by: id)
             }
             
-            // Load the initial set of episodes (uses the correct function below)
             await fetchEpisodes(isYouTube: episodeSourceIsYouTube)
             
             // Load novel detail

@@ -3,7 +3,6 @@ import FirebaseFirestore
 
 
 struct NovelDetailView: View {
-    // Requires a novel ID to fetch the details
     let novelId: String
     
     // The source of truth for the novel data
@@ -14,15 +13,15 @@ struct NovelDetailView: View {
         ZStack(alignment: .topLeading) {
             Color.rakioBackground.ignoresSafeArea()
 
-            // 1. Handle Loading State
+            //Handle Loading State
             if viewModel.isLoading {
                 ProgressView("Loading novel details...")
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // 2. Handle Success State (Extracted to new view)
+            //Handle Success State (Extracted to new view)
             } else if let novel = viewModel.novel {
                 NovelContentView(novel: novel, viewModel: viewModel)
-            // 3. Handle Error State
+            //Handle Error State
             } else if let errorMessage = viewModel.errorMessage {
                 Text("Error: \(errorMessage)")
                     .foregroundColor(.red)
@@ -47,14 +46,13 @@ struct NovelDetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            // Triggers the data fetch on view appearance
             await viewModel.fetchNovel(by: novelId)
         }
     }
 }
 
 struct NovelContentView: View {
-    let novel: NovelDetail // ✨ FIX 1: Change to the actual type
+    let novel: NovelDetail
     @ObservedObject var viewModel: NovelDetailViewModel
     
     var body: some View {
@@ -95,7 +93,7 @@ struct NovelContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.bottom, 50)
             .background(Color.rakioBackground.ignoresSafeArea()
-            ) // Make scroll background dark
+            )
         }
         
     }
@@ -105,7 +103,6 @@ struct NovelContentView: View {
         
         var body: some View {
             if let imageName = imageName {
-                // Assumes Image(uiImage: UIImage(named: ...)) works for assets
                 Image(uiImage: UIImage(named: imageName) ?? UIImage())
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -148,7 +145,7 @@ struct NovelContentView: View {
                                     ChapterRow(
                                         chapters: viewModel.chapters,
                                         currentIndex: index,
-                                        viewModel: viewModel      // ✅ pass it explicitly
+                                        viewModel: viewModel
                                     )
                                 }
 
@@ -168,7 +165,6 @@ struct NovelContentView: View {
         let chapters: [Chapter]
         let currentIndex: Int
         @ObservedObject var viewModel: NovelDetailViewModel
-      // Index of this chapter in the list
         
         var body: some View {
             let chapter = chapters[currentIndex]
@@ -176,7 +172,7 @@ struct NovelContentView: View {
             
             NavigationLink(
                 destination: ChapterDetailView(
-                    viewModel: viewModel,          // pass the ViewModel
+                    viewModel: viewModel,
                     chapters: chapters,
                     currentIndex: currentIndex
                 )
@@ -213,7 +209,7 @@ struct NovelContentView: View {
     
     
     struct RelatedSeriesView: View {
-        let series: Series // Assuming 'Series' is a defined model type
+        let series: Series
         
         var body: some View {
             VStack(alignment: .leading, spacing: 10) {
@@ -223,7 +219,6 @@ struct NovelContentView: View {
                     .foregroundColor(.white)
                     .padding(.top, 20)
                 
-                // Assumes SeriesDetailView exists
                 NavigationLink(destination: SeriesDetailView(show: series)) {
                     HStack(spacing: 15) {
                         Image(uiImage: UIImage(named: series.imageName) ?? UIImage())

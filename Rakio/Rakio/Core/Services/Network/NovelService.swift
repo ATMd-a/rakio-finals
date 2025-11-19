@@ -6,7 +6,7 @@ class NovelService: ObservableObject {
     private let db = Firestore.firestore()
     private let collectionName = "novels"
 
-    // Fetches ONLY the essential data for the list view (assumes Novel is a simpler struct)
+    // Fetches  the essential data for the list view
     func fetchAllNovels() async throws -> [Novel] {
         print("🔄 Fetching essential novel data from Firestore...")
         let snapshot = try await db.collection(collectionName).getDocuments()
@@ -14,7 +14,6 @@ class NovelService: ObservableObject {
         var novelsList: [Novel] = []
         for document in snapshot.documents {
             do {
-                // Assumes Novel is Codable
                 var novel = try document.data(as: Novel.self)
                 novel.id = document.documentID
                 novelsList.append(novel)

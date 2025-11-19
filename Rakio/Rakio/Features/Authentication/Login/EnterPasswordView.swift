@@ -5,10 +5,10 @@ struct EnterPasswordView: View {
     let email: String
     
     @State private var password: String = ""
-    @State private var showMismatchWarning: Bool = false  // can be removed since no confirm password
+    @State private var showMismatchWarning: Bool = false
     @State private var errorMessage: String?
     @State private var isLoading = false
-    @State private var navigateToHome = false  // <-- Navigation state
+    @State private var navigateToHome = false
     @Binding var selectedTab: ContentView.Tab
     
     var body: some View {
@@ -90,9 +90,8 @@ struct EnterPasswordView: View {
                             isLoading = false
                             switch result {
                             case .success(_):
-                                // On successful login:
                                 selectedTab = .home  // switch tab to home
-                                dismiss()            // dismiss EnterPasswordView
+                                dismiss()         
                                 
                             case .failure(let error):
                                 errorMessage = error.localizedDescription
@@ -155,6 +154,3 @@ struct EnterPasswordView: View {
     }
 }
 
-//#Preview {
-//    EnterPasswordView(email: "example@email.com", selectedTab: .constant(.account))
-//}

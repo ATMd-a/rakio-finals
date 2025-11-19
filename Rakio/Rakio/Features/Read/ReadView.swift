@@ -5,7 +5,6 @@ struct ReadView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top Menu (keeping your exact design)
             HStack {
                 Text("Rakio")
                     .font(.title)
@@ -18,10 +17,7 @@ struct ReadView: View {
             }
             .padding(.horizontal)
             .padding(.top, 20)
-            
-            //---
-            
-            // Content Area
+
             if viewModel.isLoading {
                 VStack {
                     Spacer()

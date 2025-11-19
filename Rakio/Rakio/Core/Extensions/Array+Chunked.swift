@@ -1,4 +1,4 @@
-// Array+Chunked.swift
+
 import Foundation
 
 extension Array {

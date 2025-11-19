@@ -100,7 +100,6 @@ class UserService {
         return false
     }
     
-    //to be removed
     
     func backfillMissingSeriesIds() async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -182,12 +181,7 @@ class UserService {
             print("❌ Failed to mark episode watched: \(error)")
         }
     }
-    
-    
-    
-    // MARK: - Fetch Watched Series
-    // ... existing code above ...
-    
+
     // MARK: - Fetch Watched Series
     func fetchWatchedVideos() async throws -> [WatchedContent] {
         guard let userId = Auth.auth().currentUser?.uid else {

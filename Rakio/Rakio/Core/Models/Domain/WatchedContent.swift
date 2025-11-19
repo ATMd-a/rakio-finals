@@ -3,16 +3,14 @@ import FirebaseFirestore
 
 struct WatchedContent: Identifiable {
     let id = UUID()
-    let videoId: String              // ✅ Replaces seriesDocumentID / episodeContentID
-    let title: String                // ✅ Display title for the video
-    let thumbnailURL: String?        // ✅ Optional image for display
+    let videoId: String   
+    let title: String
+    let thumbnailURL: String?
     let lastWatchedAt: Date
     let progress: Double
-    
-    // Optional fallback for episodes (for backwards compatibility)
-    let seriesTitle: String?         // e.g. "Breaking Bad"
-    let episodeTitle: String?        // e.g. "Pilot"
-    let isEpisode: Bool              // Helps the UI decide what to show
+    let seriesTitle: String?
+    let episodeTitle: String?
+    let isEpisode: Bool
     
     // MARK: - Computed display helpers
     

@@ -6,10 +6,10 @@ struct SetPasswordView: View {
     
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
-    @State private var showMismatchWarning: Bool = false  // can keep or remove, optional now
+    @State private var showMismatchWarning: Bool = false
     @State private var errorMessage: String?
     @State private var isLoading = false
-    @State private var showPasswordMismatchSheet = false   // New state for popover
+    @State private var showPasswordMismatchSheet = false
     @Binding var selectedTab: ContentView.Tab
     
     var body: some View {
@@ -115,7 +115,6 @@ struct SetPasswordView: View {
                             }
                         }
                     } else {
-                        // Show popover instead of inline warning
                         showPasswordMismatchSheet = true
                     }
                 }) {
@@ -196,7 +195,3 @@ struct SetPasswordView: View {
         return string
     }
 }
-
-//#Preview {
-//    SetPasswordView(email: "example@email.com", selectedTab: .constant(.account))
-//}

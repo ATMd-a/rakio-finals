@@ -106,7 +106,6 @@ struct ChapterDetailView: View {
     }
 
     private func checkIfReachedBottom(scrollHeight: CGFloat, viewHeight: CGFloat) {
-        // When within 50 pts of bottom, go to next chapter
         if scrollOffset + viewHeight >= scrollHeight - 50 {
             if viewModel.canGoNext {
                 viewModel.navigateChapter(direction: .next)

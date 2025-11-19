@@ -12,7 +12,7 @@ struct Episode: Identifiable, Codable {
     @DocumentID var id: String?
     let title: String
     let code: [String]
-    let epNumber: Int // Make sure this matches your Firestore data type
+    let epNumber: Int 
     
 
     enum CodingKeys: String, CodingKey {

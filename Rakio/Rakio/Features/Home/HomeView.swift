@@ -9,9 +9,6 @@ struct HomeView: View {
         ZStack(alignment: .top) {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 12) {
-                    // Removed scrollableHeader()
-
-                    // Hero Section moved to the very top
                     if let featuredSeries = viewModel.shows.first(where: { $0.title == "23.5" }) {
                         HeroSectionView(series: featuredSeries, isPlaying: $viewModel.isHeroVideoPlaying)
                             .frame(maxWidth: .infinity)
@@ -31,7 +28,6 @@ struct HomeView: View {
                 }
             }
             .background(Color.rakioBackground.ignoresSafeArea())
-            //.navigationBarHidden(true)
             .task {
                 if viewModel.shows.isEmpty && !viewModel.isLoading {
                     await viewModel.loadHomeData()
@@ -55,7 +51,6 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity)
                 .clipped()
 
-            // Gradient overlay for readability
             LinearGradient(
                 gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.7)]),
                 startPoint: .top,
@@ -63,7 +58,6 @@ struct HomeView: View {
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // Overlay content on the video
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
@@ -74,9 +68,7 @@ struct HomeView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.yellow)
                 }
-                //.padding(.horizontal, 4)
                 .padding(.vertical, 4)
-                //.background(Color.black.opacity(0.7))
                 .cornerRadius(4)
 
                 Text(series.title)
@@ -100,27 +92,23 @@ struct HomeView: View {
                     .font(.system(size: 12, weight: .light))
                     .foregroundColor(.white)
                     .shadow(radius: 5)
-                    .lineLimit(2)  // <-- limits text to 2 lines
+                    .lineLimit(2)
                     .truncationMode(.tail)
                     .frame(width: 250, alignment: .leading)
 
-                // Removed year and genre text
-
                 Button(action: {
-                    // Play Now action
                 }) {
                     HStack(spacing: 8) {
                         Image(systemName: "play.fill")
                         Text("Play Now")
-                            .font(.system(size: 12, weight: .semibold)) // Font size and weight
+                            .font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundColor(.white)
-                    .padding(.horizontal, 16) // Wider button
-                    .padding(.vertical, 8)   // Taller button
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
                     .background(Color.black.opacity(0.7))
-                    .cornerRadius(5)         // Rounded corners
+                    .cornerRadius(5)
                 }
-                //.padding(.top, 8)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.bottom, 20)
@@ -171,7 +159,6 @@ struct HomeView: View {
         }
     }
 
-    // Removed scrollableHeader function
 
     // Helper functions
     private func yearString(from date: Date) -> String {
@@ -238,7 +225,3 @@ struct HomeView: View {
         .cornerRadius(8)
     }
 }
-
-//#Preview {
-//    HomeView()
-//}

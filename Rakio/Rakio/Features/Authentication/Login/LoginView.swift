@@ -11,8 +11,6 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 10) {
-                
-                // X Button in top-left
                 HStack {
                     Button(action: {
                         dismiss()
@@ -61,7 +59,6 @@ struct LoginView: View {
                     .foregroundColor(.white.opacity(0.7))
                 Spacer()
                 
-                // Email Input Field
                 // Email Input Field with error inside placeholder
                 ZStack(alignment: .leading) {
                     if email.isEmpty {
@@ -115,7 +112,6 @@ struct LoginView: View {
                                 errorMessage = "Email not found. Please sign up."
                                 return
                             }
-                            // Email exists, proceed to next screen
                             navigateToEnterPassword = true
                         }
                     }
@@ -194,7 +190,3 @@ struct LoginView: View {
         return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
     }
 }
-
-//#Preview {
-//    LoginView(selectedTab: .constant(.account))
-//}

@@ -97,8 +97,6 @@ final class AccountViewModel: ObservableObject {
             
             // Process each watched video
             for (videoId, watchData) in watchHistory {
-                // ✅ FIX: Query collectionGroup to search ALL episode subcollections
-                // This will find episodes in both "episodes" and "episodes 2"
                 let episodeQuery = try await db.collectionGroup("episodes")
                     .whereField("code", arrayContains: videoId)
                     .limit(to: 1)

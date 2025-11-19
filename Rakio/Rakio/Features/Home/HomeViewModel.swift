@@ -9,7 +9,7 @@ import SwiftUI
 
 class HomeViewModel: ObservableObject {
     @Published var shows: [Series] = []
-    @Published var novels: [Novel] = []          // keep novels here as before
+    @Published var novels: [Novel] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isHeroVideoPlaying = false
@@ -24,8 +24,6 @@ class HomeViewModel: ObservableObject {
 
         do {
             print("Starting to load home data...")
-
-            // Fetch both concurrently, but fetch series only (no episodes)
             async let fetchedShows = seriesService.fetchSeriesOnly()
             async let fetchedNovels = novelService.fetchAllNovels()
 

@@ -5,14 +5,12 @@ struct NovelRowView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
-            // Safely unwrap the optional imageName
             if let imageName = novel.imageName {
                 novelImage(imageName)
                     .frame(width: 116, height: 170)
                     .clipped()
                     .cornerRadius(8)
             } else {
-                // Handle the case where the image name is nil
                 Rectangle()
                     .fill(Color.gray)
                     .frame(width: 116, height: 170)

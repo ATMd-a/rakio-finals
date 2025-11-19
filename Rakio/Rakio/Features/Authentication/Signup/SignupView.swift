@@ -14,8 +14,6 @@ struct SignupView: View {
         NavigationStack {
             ZStack {
                 VStack(spacing: 10) {
-                    
-                    // X Button in top-left with consistent frame and padding
                     HStack {
                         Button(action: {
                             dismiss()
@@ -30,8 +28,6 @@ struct SignupView: View {
                         Spacer()
                     }
                     
-
-                    // Use padding instead of spacer for consistent spacing
                     Spacer().frame(height: 300)
 
                     // Logo
@@ -64,7 +60,7 @@ struct SignupView: View {
                         .foregroundColor(.white.opacity(0.7))
                     Spacer()
                     
-                    // Email Input Field with error as placeholder style like LoginView
+                    // Email Input Field with error as placeholder style
                     ZStack(alignment: .leading) {
                         if email.isEmpty {
                             Text(errorMessage ?? "Enter your email")
@@ -91,7 +87,7 @@ struct SignupView: View {
                             .disableAutocorrection(true)
                     }
                     
-                    // Continue Button - same style as LoginView
+                    // Continue Button
                     Button(action: {
                         errorMessage = nil
 
@@ -112,7 +108,6 @@ struct SignupView: View {
                                 if let error = error {
                                     errorMessage = "Failed to check email: \(error.localizedDescription)"
                                 } else if exists {
-                                    // Show overlay popup here
                                     showEmailExistsOverlay = true
                                 } else {
                                     navigateToSetPassword = true
@@ -166,7 +161,7 @@ struct SignupView: View {
                         .padding(.bottom, 16)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .disabled(showEmailExistsOverlay) // Disable interaction when overlay is shown
+                .disabled(showEmailExistsOverlay)
                 
                 // MARK: - Overlay View
                 if showEmailExistsOverlay {
@@ -174,7 +169,6 @@ struct SignupView: View {
                         .ignoresSafeArea()
                         .transition(.opacity)
                         .onTapGesture {
-                            // Tap outside to dismiss
                             showEmailExistsOverlay = false
                         }
 
@@ -239,7 +233,3 @@ struct SignupView: View {
         return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
     }
 }
-
-//#Preview {
-//    SignupView(selectedTab: .constant(.account))
-//}

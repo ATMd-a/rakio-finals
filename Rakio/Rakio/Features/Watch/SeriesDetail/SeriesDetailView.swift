@@ -24,7 +24,6 @@ struct SeriesDetailView: View {
             code: [viewModel.series.trailerURL],
             epNumber: 0
         )
-        // This is now correct, as viewModel.episodes only contains YT OR DM episodes, not both.
         return [trailerEpisode] + viewModel.episodes
     }
 
@@ -126,14 +125,14 @@ struct SeriesDetailView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding(.vertical, 10)
-                    // 💡 CRUCIAL CHANGE HERE: Reload episodes when the source changes
+
                     .onChange(of: isUsingYouTube) { newSourceIsYouTube in
-                        // 1. Load the new set of episodes
+                        //Load the new set of episodes
                         Task {
                             await viewModel.fetchEpisodes(isYouTube: newSourceIsYouTube)
                         }
 
-                        // 2. Reset or switch the current episode
+                        //Reset or switch the current episode
                         if let firstEpisode = allEpisodes.first(where: { $0.epNumber == 1 }) {
                             currentEpisode = firstEpisode
                         } else {
@@ -273,18 +272,17 @@ extension SeriesDetailView {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let userRef = Firestore.firestore().collection("users").document(userId)
         
-        // Use the actual video ID as the key in the watchHistory map
-        guard let videoId = episode.code.first, !videoId.isEmpty else { return } // Added Guard
+        // Use the video ID as the key in the watchHistory map
+        guard let videoId = episode.code.first, !videoId.isEmpty else { return }
         
         do {
             try await userRef.updateData([
-                "watchHistory.\(videoId)": [ // <-- FIX: Use videoId as the key
+                "watchHistory.\(videoId)": [
                     "progress": 1,
                     "lastWatchedAt": FieldValue.serverTimestamp()
                 ]
             ])
             
-            // This line is now safe, but should still be the videoId if that's what's tracked
             if let videoID = episode.code.first {
                 watchedEpisodes.insert(videoID)
             }
@@ -294,8 +292,6 @@ extension SeriesDetailView {
     }
 
 
-
-    /// Checks if a given episode has been watched
     private func checkIfEpisodeWatched(_ episodeId: String) async {
         guard isUserLoggedIn, !episodeId.isEmpty else { return }
         let userId = Auth.auth().currentUser!.uid
@@ -329,7 +325,7 @@ extension SeriesDetailView {
         do {
             let doc = try await userRef.getDocument()
             if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
-                    let watchedIds = Set(watchHistory.keys) // The keys *are* the video IDs after Fix 1
+                    let watchedIds = Set(watchHistory.keys) 
                     await MainActor.run { watchedEpisodes = watchedIds }
                 } else {
                 await MainActor.run { watchedEpisodes = [] }

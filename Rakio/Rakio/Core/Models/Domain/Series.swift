@@ -11,11 +11,9 @@ struct Series: Identifiable, Codable {
     var trailerURL: String
     var imageName: String
     var relatedNovelId: DocumentReference?
-    // REMOVED: var episodes: [Episode]? - This was causing the compilation errors
 
     enum CodingKeys: String, CodingKey {
         case title, description, genre, isSeries, trailerURL, imageName, dateReleased, relatedNovelId
-        // REMOVED: episodes from CodingKeys
     }
     
     // Computed property for formatted date

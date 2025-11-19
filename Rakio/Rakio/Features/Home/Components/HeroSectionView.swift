@@ -31,7 +31,6 @@ struct HeroSectionView: View {
 
             // Content overlay
             VStack(alignment: .leading, spacing: 8) {
-                // "New" badge
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
                         .font(.caption)

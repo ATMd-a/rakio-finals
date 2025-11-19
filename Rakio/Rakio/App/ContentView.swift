@@ -19,7 +19,7 @@ struct ContentView: View {
                     case .read:
                         ReadView()
                     case .account:
-                        AccountView(selectedTab: $selectedTab)  // <-- Added binding here
+                        AccountView(selectedTab: $selectedTab)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

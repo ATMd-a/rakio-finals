@@ -85,7 +85,7 @@ class FirebaseManager: ObservableObject {
             } else {
                 print("✅ User document successfully created for \(username).")
 
-                // ✅ Also update FirebaseAuth displayName
+                // update FirebaseAuth displayName
                 let changeRequest = user.createProfileChangeRequest()
                 changeRequest.displayName = username
                 changeRequest.commitChanges(completion: nil)
@@ -109,10 +109,6 @@ class FirebaseManager: ObservableObject {
 }
 
 extension FirebaseManager {
-    /// Checks if an email exists by querying the 'users' collection in Firestore.
-    /// - Parameters:
-    ///   - email: The email to check.
-    ///   - completion: Returns true if user exists, false otherwise. Also returns an error if any.
     func checkIfEmailExists(_ email: String, completion: @escaping (Bool, Error?) -> Void) {
         firestore.collection("users")
             .whereField("email", isEqualTo: email)

@@ -14,7 +14,7 @@ struct EditAccountView: View {
     @State private var showImagePicker = false
     @State private var isSaving = false
     @State private var errorMessage: String?
-    @State private var showSuccessAlert = false // ✅ success popup
+    @State private var showSuccessAlert = false
 
     private let db = Firestore.firestore()
 
@@ -115,7 +115,7 @@ struct EditAccountView: View {
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $profileImage)
         }
-        .alert(isPresented: $showSuccessAlert) { // ✅ success alert
+        .alert(isPresented: $showSuccessAlert) {
             Alert(
                 title: Text("✅ Success"),
                 message: Text("Your profile has been updated successfully."),
@@ -156,7 +156,7 @@ struct EditAccountView: View {
 
         let group = DispatchGroup()
 
-        // 🧑‍💻 Update username
+        // Update username
         if !username.isEmpty {
             group.enter()
             let changeRequest = user.createProfileChangeRequest()
@@ -172,7 +172,7 @@ struct EditAccountView: View {
             }
         }
 
-        // 🔒 Update password
+        // Update password
         if !newPassword.isEmpty {
             group.enter()
             user.updatePassword(to: newPassword) { error in
@@ -181,7 +181,7 @@ struct EditAccountView: View {
             }
         }
 
-        // 🖼️ Save profile image locally
+        // Save profile image locally
         if let profileImage = profileImage {
             group.enter()
             LocalStorageManager.shared.saveProfileImage(profileImage, for: user.uid)
@@ -189,12 +189,12 @@ struct EditAccountView: View {
             group.leave()
         }
 
-        // 🔁 When all done
+        // When all done
         group.notify(queue: .main) {
             self.isSaving = false
             if self.errorMessage == nil {
                 self.viewModel.currentUsername = self.username
-                self.showSuccessAlert = true // ✅ success popup
+                self.showSuccessAlert = true 
             }
         }
     }

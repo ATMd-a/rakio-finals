@@ -53,7 +53,7 @@ class SeriesService {
         return episodes
     }
 
-    // ✅ UPDATED: Both methods now return Episode (not separate types)
+    // Both methods return Episode (not separate types)
     func fetchYouTubeEpisodes(for seriesId: String) async throws -> [Episode] {
         try await fetchEpisodes(for: seriesId, subcollection: "episodes")
     }
