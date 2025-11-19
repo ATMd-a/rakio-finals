@@ -97,16 +97,11 @@ struct AccountView: View {
                 NavigationLink(destination: LoginView(selectedTab: .constant(.account)).navigationBarBackButtonHidden(true)) {
                     row(title: "My List")
                 }
-                Divider().background(Color.white.opacity(0.4))
-                NavigationLink(destination: LoginView(selectedTab: .constant(.account)).navigationBarBackButtonHidden(true)) {
-                    row(title: "My Reminders")
-                }
             } else {
                 NavigationLink(destination: MyListView()) {
                     row(title: "My List")
                 }
-                Divider().background(Color.white.opacity(0.4))
-                row(title: "My Reminders", isDisabled: true)
+               
             }
         }
         .overlay(
