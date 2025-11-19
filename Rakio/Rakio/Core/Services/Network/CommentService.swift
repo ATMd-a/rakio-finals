@@ -2,6 +2,9 @@ import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 
+
+
+// MARK: - Comment Service
 class CommentService {
     static let shared = CommentService()
     private let db = Firestore.firestore()
@@ -18,7 +21,9 @@ class CommentService {
             .getDocuments()
         
         return snapshot.documents.compactMap { doc in
-            try? doc.data(as: Comment.self)
+            var comment = try? doc.data(as: Comment.self)
+            comment?.id = doc.documentID
+            return comment
         }
     }
     
@@ -33,8 +38,6 @@ class CommentService {
             throw CommentError.userNotAuthenticated
         }
         
-        let collectionPath = "\(contentType.rawValue)/\(contentId)/comments"
-        
         let commentData: [String: Any] = [
             "userId": userId,
             "username": username,
@@ -43,7 +46,8 @@ class CommentService {
             "likes": 0,
             "replies": []
         ]
-        
+
+        let collectionPath = "\(contentType.rawValue)/\(contentId)/comments"
         try await db.collection(collectionPath).addDocument(data: commentData)
     }
     
@@ -57,16 +61,15 @@ class CommentService {
             throw CommentError.userNotAuthenticated
         }
         
-        let collectionPath = "\(contentType.rawValue)/\(contentId)/comments"
-        let docRef = db.collection(collectionPath).document(commentId)
+        let docRef = db.collection("\(contentType.rawValue)/\(contentId)/comments")
+                        .document(commentId)
         
-        // Verify ownership
         let doc = try await docRef.getDocument()
         guard let comment = try? doc.data(as: Comment.self),
               comment.userId == userId else {
             throw CommentError.unauthorized
         }
-        
+
         try await docRef.delete()
     }
     
@@ -80,8 +83,8 @@ class CommentService {
             throw CommentError.userNotAuthenticated
         }
         
-        let collectionPath = "\(contentType.rawValue)/\(contentId)/comments"
-        let docRef = db.collection(collectionPath).document(commentId)
+        let docRef = db.collection("\(contentType.rawValue)/\(contentId)/comments")
+                        .document(commentId)
         
         try await docRef.updateData([
             "likes": FieldValue.increment(Int64(1))
@@ -90,7 +93,7 @@ class CommentService {
 }
 
 // MARK: - Supporting Types
-enum ContentType: String {
+enum ContentType: String, Codable {
     case shows
     case novels
 }
