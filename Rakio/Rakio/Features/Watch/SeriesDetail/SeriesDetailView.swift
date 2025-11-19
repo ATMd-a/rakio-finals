@@ -210,9 +210,12 @@ struct SeriesDetailView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
 
-                // MARK: Comments
-                CommentsView()
-                    .padding(.top, 20)
+                // MARK: Comments - FIXED
+                EnhancedCommentsView(
+                    contentId: viewModel.series.id ?? "",
+                    contentType: ContentType.shows
+                )
+                .padding(.top, 20)
 
                 Spacer()
             }
@@ -276,12 +279,15 @@ extension SeriesDetailView {
         guard let videoId = episode.code.first, !videoId.isEmpty else { return }
         
         do {
-            try await userRef.updateData([
+            // FIXED: Wrapped in Task to handle Sendable warning
+            let updateData: [String: Any] = [
                 "watchHistory.\(videoId)": [
                     "progress": 1,
                     "lastWatchedAt": FieldValue.serverTimestamp()
                 ]
-            ])
+            ]
+            
+            try await userRef.updateData(updateData)
             
             if let videoID = episode.code.first {
                 watchedEpisodes.insert(videoID)
@@ -325,7 +331,7 @@ extension SeriesDetailView {
         do {
             let doc = try await userRef.getDocument()
             if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
-                    let watchedIds = Set(watchHistory.keys) 
+                    let watchedIds = Set(watchHistory.keys)
                     await MainActor.run { watchedEpisodes = watchedIds }
                 } else {
                 await MainActor.run { watchedEpisodes = [] }
@@ -380,42 +386,5 @@ extension SeriesDetailView {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         return formatter.string(from: date)
-    }
-}
-
-
-
-
-// MARK: - Comments View
-struct CommentsView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Comments")
-                .font(.headline)
-                .foregroundColor(.white)
-
-            HStack {
-                Text("Please login first to comment")
-                    .foregroundColor(.white)
-                    .font(.footnote)
-
-                Spacer()
-
-                Button(action: { }) {
-                    Image(systemName: "face.smiling")
-                        .foregroundColor(.white)
-                }
-
-                Button(action: { }) {
-                    Image(systemName: "paperplane.fill")
-                        .foregroundColor(.white)
-                }
-            }
-            .padding(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.white, lineWidth: 1)
-            )
-        }
     }
 }

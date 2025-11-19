@@ -106,7 +106,8 @@ class UserService {
         let userRef = db.collection("users").document(uid)
         let doc = try await userRef.getDocument()
         
-        guard var watchHistory = doc.data()?["watchHistory"] as? [String: [String: Any]] else { return }
+        // FIXED: Changed var to let
+        guard let watchHistory = doc.data()?["watchHistory"] as? [String: [String: Any]] else { return }
         
         for (contentId, data) in watchHistory {
             if data["seriesId"] == nil {
@@ -128,7 +129,9 @@ class UserService {
             
         }
         
-        try await userRef.updateData(["watchHistory": watchHistory])
+        // Note: This line was trying to update with the original watchHistory
+        // which was already being updated in the loop above
+        // Removed to avoid redundancy
     }
     
     // MARK: - Watch History Management

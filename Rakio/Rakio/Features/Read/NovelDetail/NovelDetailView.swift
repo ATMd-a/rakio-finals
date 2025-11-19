@@ -85,8 +85,12 @@ struct NovelContentView: View {
                         RelatedSeriesView(series: series)
                     }
                     
-                    CommentsView()
-                        .padding(.top, 40)
+                    // FIXED: Added ContentType enum reference
+                    EnhancedCommentsView(
+                        contentId: novel.id ?? "",
+                        contentType: ContentType.novels
+                    )
+                    .padding(.top, 40)
                 }
                 .padding(.horizontal, 20)
             }
@@ -167,9 +171,7 @@ struct NovelContentView: View {
         @ObservedObject var viewModel: NovelDetailViewModel
         
         var body: some View {
-            let chapter = chapters[currentIndex]
-            let isLast = currentIndex == chapters.count - 1
-            
+            // FIXED: Removed unused variables
             NavigationLink(
                 destination: ChapterDetailView(
                     viewModel: viewModel,
@@ -203,7 +205,6 @@ struct NovelContentView: View {
                 }
             }
             .buttonStyle(PlainButtonStyle())
-
         }
     }
     

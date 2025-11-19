@@ -17,7 +17,7 @@ extension Color {
     static let rakioLightBackground = Color(hex: "1C1917")
     
     // MARK: - Semantic Colors
-    static let rakioTextPrimary = Color.whit
+    static let rakioTextPrimary = Color.white
     static let rakioTextSecondary = Color.white.opacity(0.7)
     static let rakioTextTertiary = Color.gray
     static let rakioSuccess = Color.green
