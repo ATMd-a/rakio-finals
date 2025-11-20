@@ -46,7 +46,7 @@ struct HomeView: View {
     
     private func heroSection(for series: Series, isPlaying: Binding<Bool>) -> some View {
         ZStack(alignment: .bottomLeading) {
-            YouTubePlayerView(videos: [series.trailerURL], isPlaying: isPlaying)
+            YouTubePlayerView(videoID: extractVideoID(from: series.trailerURL), isPlaying: isPlaying)
                 .frame(height: UIScreen.main.bounds.height * 0.3)
                 .frame(maxWidth: .infinity)
                 .clipped()
@@ -224,4 +224,22 @@ struct HomeView: View {
         .clipped()
         .cornerRadius(8)
     }
+    func extractVideoID(from urlString: String) -> String {
+        if urlString.count == 11 && !urlString.contains("/") { return urlString }
+        
+        if let url = URL(string: urlString) {
+            if let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
+               let videoID = queryItems.first(where: { $0.name == "v" })?.value {
+                return videoID
+            }
+            if url.host?.contains("youtu.be") == true {
+                return url.lastPathComponent
+            }
+            if url.path.contains("/embed/") {
+                return url.lastPathComponent
+            }
+        }
+        return urlString
+    }
+
 }

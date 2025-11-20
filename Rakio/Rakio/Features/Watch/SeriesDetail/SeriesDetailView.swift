@@ -40,16 +40,24 @@ struct SeriesDetailView: View {
                 // MARK: Video Player
                 if let episode = currentEpisode {
                     if isUsingYouTube {
-                        YouTubePlayerView(videos: episode.code, isPlaying: $isPlayerPlaying)
-                            .frame(height: 220)
-                            .cornerRadius(12)
-                            .onChange(of: playerProgress) { newValue in
-                                if newValue >= 0.9 {
-                                    Task {
-                                        await markEpisodeWatched(episode)
+                        if let videoID = episode.code.first {
+                            YouTubePlayerView(videoID: videoID, isPlaying: $isPlayerPlaying)
+                                .frame(height: 220)
+                                .cornerRadius(12)
+                                .onChange(of: playerProgress) { newValue in
+                                    if newValue >= 0.9 {
+                                        Task { await markEpisodeWatched(episode) }
                                     }
                                 }
-                            }
+                        } else {
+                            Text("No video available")
+                                .frame(height: 220)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.gray.opacity(0.3))
+                                .cornerRadius(12)
+                                .foregroundColor(.white)
+                                .padding(.horizontal)
+                        }
 
                     } else {
                         DailymotionPlayerView(videoID: episode.code.first ?? "", isPlaying: $isPlayerPlaying)
@@ -125,20 +133,13 @@ struct SeriesDetailView: View {
                     }
                     .pickerStyle(SegmentedPickerStyle())
                     .padding(.vertical, 10)
-
                     .onChange(of: isUsingYouTube) { newSourceIsYouTube in
-                        //Load the new set of episodes
-                        Task {
-                            await viewModel.fetchEpisodes(isYouTube: newSourceIsYouTube)
-                        }
-
-                        //Reset or switch the current episode
+                        Task { await viewModel.fetchEpisodes(isYouTube: newSourceIsYouTube) }
                         if let firstEpisode = allEpisodes.first(where: { $0.epNumber == 1 }) {
                             currentEpisode = firstEpisode
                         } else {
                             currentEpisode = allEpisodes.first
                         }
-
                         isPlayerPlaying = true
                     }
                 }
@@ -210,7 +211,7 @@ struct SeriesDetailView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
 
-                // MARK: Comments - FIXED
+                // MARK: Comments
                 EnhancedCommentsView(
                     contentId: viewModel.series.id ?? "",
                     contentType: ContentType.shows
@@ -269,57 +270,26 @@ extension SeriesDetailView {
         }
     }
 
-    /// Marks an episode as watched in Firestore and updates local state
     @MainActor
     func markEpisodeWatched(_ episode: Episode) async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
         let userRef = Firestore.firestore().collection("users").document(userId)
-        
-        // Use the video ID as the key in the watchHistory map
         guard let videoId = episode.code.first, !videoId.isEmpty else { return }
-        
+
         do {
-            // FIXED: Wrapped in Task to handle Sendable warning
             let updateData: [String: Any] = [
                 "watchHistory.\(videoId)": [
                     "progress": 1,
                     "lastWatchedAt": FieldValue.serverTimestamp()
                 ]
             ]
-            
             try await userRef.updateData(updateData)
-            
-            if let videoID = episode.code.first {
-                watchedEpisodes.insert(videoID)
-            }
+            watchedEpisodes.insert(videoId)
         } catch {
             print(error.localizedDescription)
         }
     }
 
-
-    private func checkIfEpisodeWatched(_ episodeId: String) async {
-        guard isUserLoggedIn, !episodeId.isEmpty else { return }
-        let userId = Auth.auth().currentUser!.uid
-        let userRef = Firestore.firestore().collection("users").document(userId)
-
-        do {
-            let doc = try await userRef.getDocument()
-            if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
-                await MainActor.run {
-                    if watchHistory[episodeId] != nil {
-                        watchedEpisodes.insert(episodeId)
-                    } else {
-                        watchedEpisodes.remove(episodeId)
-                    }
-                }
-            }
-        } catch {
-            print("Error checking watch history: \(error)")
-        }
-    }
-
-    /// Loads all watched episodes for the current user
     private func loadAllWatchedEpisodes() async {
         guard isUserLoggedIn, let userId = Auth.auth().currentUser?.uid else {
             await MainActor.run { watchedEpisodes = [] }
@@ -331,9 +301,9 @@ extension SeriesDetailView {
         do {
             let doc = try await userRef.getDocument()
             if let watchHistory = doc.data()?["watchHistory"] as? [String: Any] {
-                    let watchedIds = Set(watchHistory.keys)
-                    await MainActor.run { watchedEpisodes = watchedIds }
-                } else {
+                let watchedIds = Set(watchHistory.keys)
+                await MainActor.run { watchedEpisodes = watchedIds }
+            } else {
                 await MainActor.run { watchedEpisodes = [] }
             }
         } catch {
@@ -341,7 +311,6 @@ extension SeriesDetailView {
         }
     }
 }
-
 
 // MARK: - Favorites
 extension SeriesDetailView {
