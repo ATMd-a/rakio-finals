@@ -68,11 +68,10 @@ struct ReadView: View {
                 ScrollView {
                     LazyVStack(spacing: 20) {
                         ForEach(viewModel.novels) { novel in
-                            // Correctly link to the NovelDetailView
                             NavigationLink(destination: NovelDetailView(novelId: novel.id!)) {
                                 NovelRowView(novel: novel)
                             }
-                            .buttonStyle(PlainButtonStyle()) // Keeps the row's appearance from changing
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     .padding(.vertical)
