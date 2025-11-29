@@ -1,18 +1,3 @@
-//
-//  CommentsSectionView.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
-
-//
-//  CommentsSectionView.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
 import SwiftUI
 import FirebaseAuth
 
@@ -295,16 +280,4 @@ struct CommentsSectionView: View {
             commentText = ""
         }
     }
-}
-
-// MARK: - Preview
-#Preview {
-    ScrollView {
-        CommentsSectionView(
-            contentId: "test123",
-            contentType: .shows
-        )
-        .padding()
-    }
-    .background(Color.rakioBackground)
 }
