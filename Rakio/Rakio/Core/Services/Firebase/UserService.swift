@@ -11,7 +11,7 @@ class UserService {
     
     private init() {}
     
-    // MARK: - Fetch Current User
+    //Fetch Current User
     func fetchCurrentUser() async throws -> UserModel? {
         guard let uid = Auth.auth().currentUser?.uid else { return nil }
         let doc = try await db.collection("users").document(uid).getDocument()
@@ -21,7 +21,7 @@ class UserService {
         return nil
     }
     
-    // MARK: - Fetch Favorites
+    //Fetch Favorites
     func fetchFavoriteSeries(for user: UserModel) async throws -> [Series] {
         let favorites = user.favorites
         guard !favorites.isEmpty else { return [] }
@@ -72,7 +72,7 @@ class UserService {
         return allSeries
     }
     
-    // MARK: - Favorites Management
+    //Favorites Management
     func addSeriesToFavorites(seriesId: String) async throws {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let userRef = db.collection("users").document(uid)
@@ -106,7 +106,6 @@ class UserService {
         let userRef = db.collection("users").document(uid)
         let doc = try await userRef.getDocument()
         
-        // FIXED: Changed var to let
         guard let watchHistory = doc.data()?["watchHistory"] as? [String: [String: Any]] else { return }
         
         for (contentId, data) in watchHistory {
@@ -128,13 +127,9 @@ class UserService {
             }
             
         }
-        
-        // Note: This line was trying to update with the original watchHistory
-        // which was already being updated in the loop above
-        // Removed to avoid redundancy
     }
     
-    // MARK: - Watch History Management
+    //Watch History Management
     func updateWatchHistory(
         for videoId: String,
         episodeTitle: String,
@@ -185,7 +180,7 @@ class UserService {
         }
     }
 
-    // MARK: - Fetch Watched Series
+    //Fetch Watched Series
     func fetchWatchedVideos() async throws -> [WatchedContent] {
         guard let userId = Auth.auth().currentUser?.uid else {
             throw AuthError.userNotLoggedIn
@@ -203,8 +198,6 @@ class UserService {
             let timestamp = (data["lastWatchedAt"] as? Timestamp)?.dateValue() ?? Date()
             let progress = data["progress"] as? Double ?? 0.0
             let thumbnailData = ThumbnailData.generate(for: videoId)
-            
-            // Fetch episode title from Firestore
             let querySnapshot = try await db.collectionGroup("episodes")
                 .whereField("code", arrayContains: videoId)
                 .limit(to: 1)
