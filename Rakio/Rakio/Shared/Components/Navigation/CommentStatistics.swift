@@ -1,22 +1,7 @@
-//
-//  CommentStatistics.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
-
-//
-//  CommentHelpers.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
 import Foundation
 import SwiftUI
 
-// MARK: - Comment Statistics
+// Comment Statistics
 struct CommentStatistics {
     let totalComments: Int
     let totalLikes: Int
@@ -64,16 +49,13 @@ struct CommentValidator {
     
     private static func containsSpam(_ text: String) -> Bool {
         let lowerText = text.lowercased()
-        
-        // Check for excessive repetition
         let words = lowerText.components(separatedBy: .whitespaces)
         let uniqueWords = Set(words)
         
         if words.count > 5 && uniqueWords.count == 1 {
-            return true // Same word repeated
+            return true
         }
         
-        // Check for excessive caps
         let capsCount = text.filter { $0.isUppercase }.count
         if Double(capsCount) / Double(text.count) > 0.7 && text.count > 10 {
             return true
