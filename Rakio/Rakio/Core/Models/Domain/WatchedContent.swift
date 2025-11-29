@@ -12,8 +12,6 @@ struct WatchedContent: Identifiable {
     let episodeTitle: String?
     let isEpisode: Bool
     
-    // MARK: - Computed display helpers
-    
     var displayTitle: String {
         if let episodeTitle = episodeTitle, isEpisode {
             return episodeTitle
