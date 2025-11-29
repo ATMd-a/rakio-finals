@@ -82,7 +82,6 @@ class CommentViewModel: ObservableObject {
             
             // Show success feedback
             withAnimation {
-                // Could add a success message here
             }
             
         } catch {
@@ -122,9 +121,7 @@ class CommentViewModel: ObservableObject {
             return
         }
         
-        // Optimistic update
         if let index = comments.firstIndex(where: { $0.id == commentId }) {
-            // Note: This is simplified. In production, track user's likes separately
             comments[index] = Comment(
                 id: comments[index].id,
                 userId: comments[index].userId,
@@ -144,7 +141,6 @@ class CommentViewModel: ObservableObject {
                 commentId: commentId
             )
         } catch {
-            // Revert on error
             await fetchComments()
             errorMessage = "Failed to like comment"
             print("❌ Error liking comment: \(error)")
