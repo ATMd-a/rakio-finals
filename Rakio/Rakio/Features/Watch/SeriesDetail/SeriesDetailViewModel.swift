@@ -27,7 +27,6 @@ class SeriesDetailViewModel: ObservableObject {
         }
 
     func loadData() async {
-            // Fetch series detail if incomplete
             if series.id == nil || series.genre.isEmpty {
                 guard let id = series.id else {
                     errorMessage = "Series ID missing. Cannot fetch data."
@@ -35,10 +34,7 @@ class SeriesDetailViewModel: ObservableObject {
                 }
                 await fetchFullSeriesData(by: id)
             }
-            
             await fetchEpisodes(isYouTube: episodeSourceIsYouTube)
-            
-            // Load novel detail
             await fetchRelatedNovelDetail()
         }
     
@@ -58,7 +54,7 @@ class SeriesDetailViewModel: ObservableObject {
         }
     }
 
-    // Fetch full series using SeriesService, with explicit ID assignment after decoding
+    // Fetch full series using SeriesService
     func fetchFullSeriesData(by id: String) async {
         do {
             let fullSeries = try await seriesService.fetchSeries(by: id)
