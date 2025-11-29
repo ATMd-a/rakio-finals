@@ -1,18 +1,3 @@
-//
-//  CommentInputView.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
-
-//
-//  CommentInputView.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
 import SwiftUI
 
 struct CommentInputView: View {
@@ -66,7 +51,6 @@ struct CommentInputView: View {
                             .foregroundColor(.white)
                             .scrollContentBackground(.hidden)
                             .onChange(of: text) { oldValue, newValue in
-                                // Enforce character limit
                                 if newValue.count > characterLimit {
                                     text = String(newValue.prefix(characterLimit))
                                 }
@@ -106,7 +90,6 @@ struct CommentInputView: View {
                     
                     // Action Buttons
                     HStack(spacing: 12) {
-                        // Emoji/Tools
                         Button(action: { showEmojiPicker.toggle() }) {
                             Image(systemName: "face.smiling")
                                 .font(.body)
@@ -171,21 +154,5 @@ struct CommentInputView: View {
         isFocused = false
         validationError = nil
         onCancel()
-    }
-}
-
-// MARK: - Preview
-#Preview {
-    ZStack {
-        Color.rakioBackground.ignoresSafeArea()
-        
-        CommentInputView(
-            text: .constant(""),
-            isPosting: .constant(false),
-            username: "JohnDoe",
-            onPost: {},
-            onCancel: {}
-        )
-        .padding()
     }
 }
