@@ -11,7 +11,7 @@ class NovelViewModel: ObservableObject {
     
     private let novelService = NovelService()
     
-    func loadNovels() async { // Mark as async
+    func loadNovels() async {
         guard !isLoading else { return }
         
         isLoading = true
@@ -27,7 +27,7 @@ class NovelViewModel: ObservableObject {
         isLoading = false
     }
     
-    func refresh() async { // Mark as async
+    func refresh() async { 
         novels = []
         await loadNovels()
     }
