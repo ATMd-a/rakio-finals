@@ -52,7 +52,6 @@ class SeriesViewModel: ObservableObject {
         }
     }
     
-    // Optional: Get both if you ever need them
     func getAllEpisodes(for seriesId: String) async -> (youtube: [Episode], dailymotion: [Episode]) {
         async let yt = getYouTubeEpisodes(for: seriesId)
         async let dm = getDailymotionEpisodes(for: seriesId)
