@@ -17,15 +17,12 @@ class FirebaseManager: ObservableObject {
     private init() {
         self.auth = Auth.auth()
         self.firestore = Firestore.firestore()
-        
-        // Listen for authentication state changes
         authStateListenerHandle = auth.addStateDidChangeListener { [weak self] auth, user in
             self?.currentUser = user
         }
     }
 
-    // MARK: - Signup
-    
+    // Signup
     func signUp(email: String, password: String, completion: @escaping (Result<User, Error>) -> Void) {
         auth.createUser(withEmail: email, password: password) { authResult, error in
             if let error = error {
@@ -39,8 +36,7 @@ class FirebaseManager: ObservableObject {
         }
     }
 
-    // MARK: - Login
-    
+    //Login
     func login(email: String, password: String, completion: @escaping (Result<User, Error>) -> Void) {
         auth.signIn(withEmail: email, password: password) { authResult, error in
             if let error = error {
@@ -53,15 +49,13 @@ class FirebaseManager: ObservableObject {
         }
     }
 
-    // MARK: - Logout
-    
+    //Logout
     func signOut() throws {
         try auth.signOut()
         currentUser = nil
     }
 
-    // MARK: - Create User Document
-    
+    //Create User Document
     func createUserDocument(user: User, email: String) {
         let username = email.components(separatedBy: "@").first ?? "user"
 
