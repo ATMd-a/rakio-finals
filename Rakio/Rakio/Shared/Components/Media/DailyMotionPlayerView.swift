@@ -12,8 +12,6 @@ struct DailymotionPlayerView: UIViewRepresentable {
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
         config.allowsPictureInPictureMediaPlayback = false
-        
-        // Enable message bridge
         config.userContentController.add(context.coordinator, name: "playerEvent")
         
         let webView = WKWebView(frame: .zero, configuration: config)
