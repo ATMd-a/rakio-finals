@@ -1,10 +1,3 @@
-////
-////  Episode.swift
-////  Test3
-////
-////  Created by STUDENT on 9/19/25.
-////
-//
 import Foundation
 import FirebaseFirestore
 
