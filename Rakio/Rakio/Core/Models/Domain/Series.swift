@@ -15,8 +15,7 @@ struct Series: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case title, description, genre, isSeries, trailerURL, imageName, dateReleased, relatedNovelId
     }
-    
-    // Computed property for formatted date
+
     var formattedDate: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
