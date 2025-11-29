@@ -23,12 +23,10 @@ struct YouTubePlayerView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Only load once
         if !context.coordinator.loaded {
             loadVideo(into: uiView)
             context.coordinator.loaded = true
         } else {
-            // Dynamic play/pause
             let js = isPlaying ? "player.playVideo();" : "player.pauseVideo();"
             uiView.evaluateJavaScript(js, completionHandler: nil)
         }
@@ -61,8 +59,6 @@ struct YouTubePlayerView: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             print("✅ YouTube embed loaded successfully")
-
-            // Optional: Unmute automatically after a short delay
             let unmuteJS = """
             setTimeout(function() {
                 if (window.player && player.unMute) {
