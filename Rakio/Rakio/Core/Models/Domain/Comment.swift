@@ -1,10 +1,3 @@
-//
-//  Comment.swift
-//  Rakio
-//
-//  Created by STUDENT on 11/19/25.
-//
-
 import Foundation
 import FirebaseFirestore
 
